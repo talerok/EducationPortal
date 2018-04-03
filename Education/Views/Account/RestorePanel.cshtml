@@ -1,0 +1,215 @@
+﻿@using  Education.BLL.DTO;
+@using Education.Captcha;
+@using Education.DAL.Entities;
+
+<script src="/lib/jquery/dist/jquery.js"></script>
+<script src='https://www.google.com/recaptcha/api.js'></script>
+
+<script>
+
+    var LoginRegexs = {};
+
+    LoginRegexs["login"] = new RegExp("@Html.Raw(regRegularExpressions.LoginRegex.Replace("\\","\\\\"))");
+    LoginRegexs["email"] = new RegExp("@Html.Raw(regRegularExpressions.EmailRegex.Replace("\\","\\\\"))");
+    LoginRegexs["phone"] = new RegExp("@Html.Raw(regRegularExpressions.PhoneRegex.Replace("\\","\\\\"))");
+    var PasswordRegex = new RegExp("@Html.Raw(regRegularExpressions.PasswordRegex.Replace("\\","\\\\"))");
+
+    function RestoreAjax(login, pass, key) {
+        $.ajax({
+            url: '/api/Restore',
+            method: 'POST',
+            data: {
+                Login: login,
+                Password: pass,
+                Key: key
+            },
+            dataType: "json",
+            headers: {
+                'Captcha': grecaptcha.getResponse()
+            },
+            success: function (data) {
+                CheckResponse(data)
+                grecaptcha.reset();
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                CheckResponse(xhr);
+                grecaptcha.reset();
+            }
+        });
+
+    }
+
+    function TryRestore() {
+        RestoreAjax($("#login").val(), $("#password").val(), $("#key").val());
+    }
+
+    function GetSendTo(code) {
+        if (code == @((int)AuthType.Email)) return "email";
+        else if (code == @((int)AuthType.Phone)) return "телефон";
+        return "";
+    }
+
+    function CheckResponse(data) {
+        if (data.error != null) {
+            WriteMessage(data.error);
+            return;
+        }
+        if (data.status == @((int)RestoreCode.Succsess)){
+            window.location.href = '/Account/Login';
+        } else if (data.status == @((int)RestoreCode.KeySent)){
+            WriteMessage("Ключ отправлен на " + GetSendTo(data.sendTo) + ", действителен до: " + data.keyTime);
+            restorPanel.SetStatus(true, true);
+        }else if (data.status == @((int)RestoreCode.NeedContact)){
+            WriteMessage("На этом аккаунте нет подтвержденных контактных данных, обратитесь к администратору");
+        }else if (data.status == @((int)RestoreCode.NeedNewKey)){
+            WriteMessage("Ключ не действителен");
+            restorPanel.SetStatus(false, true);
+        }else if (data.status == @((int)RestoreCode.UserNotFound)){
+            WriteMessage("Пользователь не найден");
+        }else if (data.status == @((int)RestoreCode.WorngKey)){
+            WriteMessage("Неправильный ключ");
+        }else if (data.status == @((int)RestoreCode.WrongPassword)){
+            WriteMessage("Неправильный формат пароля");
+        }
+
+    }
+
+    function WriteMessage(text) {
+        $("#Message").text(text);
+    }
+
+    
+
+    function RestorePanel(loginInput, passwordInput, cfpasswordInput, keyInput, buttonInput) {
+        var Status;
+        var Login = loginInput;
+        var Password = passwordInput;
+        var CfPassword = cfpasswordInput;
+        var Key = keyInput;
+        var Button = buttonInput;
+
+        function ShowAndClear(object) {
+            object.val("");
+            object.show();
+        }
+
+        function HideAndClear(object) {
+            object.val("");
+            object.hide();
+        }
+
+        function CheckLoginInput(login) {
+            function CheckLogin(login) {
+                var result;
+                $.each(LoginRegexs, function (index, value) {
+                    result = value.test(login);
+                    if (result) return false;
+                });
+                return result;
+            }
+
+            var result = CheckLogin(login.val());
+            if (login.val() == "") login.css("border-color", "");
+            else if (result) login.css("border-color", "lightgreen");
+            else login.css("border-color", "red");
+            return result;
+        }
+
+        function CheckPasswordInputs(password, confpassword) {
+            var checkP = false;
+            var checkCP = false;
+            if (password.val() == "") password.css("border-color", "");
+            else if (PasswordRegex.test(password.val())) {
+                checkP = true;
+                password.css("border-color", "lightgreen");
+            }
+            else password.css("border-color", "red");
+
+            if (confpassword.val() == "") confpassword.css("border-color", "");
+            else if (confpassword.val() == password.val()) {
+                var checkCP = true;
+                confpassword.css("border-color", "lightgreen");
+            }
+            else confpassword.css("border-color", "red");
+
+            return checkP && checkCP;
+        }
+
+        this.CheckInputs = function () {
+            var Check;
+            if (Status) {
+                Check = CheckPasswordInputs(Password, CfPassword);
+            } else {
+                Check = CheckLoginInput(Login);
+            }
+            if (Check && isCaptchaChecked()) Button.show();
+            else Button.hide();
+        }
+
+        this.GetStatus = function () {
+            return Status;
+        }
+
+        this.SetStatus = function (status, resetCaptcha) {
+            Status = status;
+            if (Status) {
+                Login.hide();
+
+                ShowAndClear(Key);
+                ShowAndClear(Password);
+                ShowAndClear(CfPassword);
+            } else {
+                Login.show();
+                HideAndClear(Key);
+                HideAndClear(Password);
+                HideAndClear(CfPassword);
+
+            }
+            if (resetCaptcha) grecaptcha.reset();
+            this.CheckInputs();
+        }
+   
+    }
+
+    
+
+    function isCaptchaChecked() {
+        return grecaptcha && grecaptcha.getResponse().length !== 0;
+    }
+
+    var restorPanel;
+
+    function checkInputs() {
+        restorPanel.CheckInputs();
+    }
+
+    $(document).ready(function () {
+        restorPanel = new RestorePanel($("#login"), $("#password"), $("#password_confirm"), $("#key"), $("#restore"));
+        restorPanel.SetStatus(false, false);
+        $("#login").bind("input", function () {
+            restorPanel.CheckInputs(restorPanel);
+        });
+
+        $("#password").bind("input", function () {
+            restorPanel.CheckInputs(restorPanel);
+        });
+
+        $("#password_confirm").bind("input", function () {
+            restorPanel.CheckInputs(restorPanel);
+        });
+    });
+
+</script>
+
+<div class="Panel">
+    <div class="DataFields">
+        <input id="login" type="text" placeholder="Имя аккаунта/Email/Телефон" />
+        <input id="key" type="text" placeholder="Проверочный код" />
+        <input id="password" type="password" placeholder="Новый пароль" />
+        <input id="password_confirm" type="password" placeholder="Повторите пароль" />
+    </div>
+    <div class="g-recaptcha"  data-callback="checkInputs" data-sitekey="@Html.Raw(CaptchaInfo.Key)"></div>
+    <text id="Message" class="ErrorMessage">  </text>
+    <input class="Button" id="restore" type="button" onclick="TryRestore()" value="Отправить" />
+</div>
+

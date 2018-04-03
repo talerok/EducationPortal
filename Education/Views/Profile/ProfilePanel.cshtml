@@ -1,0 +1,669 @@
+﻿@model Education.BLL.DTO.User.UserProfileDTO
+
+@{
+    string GetBool(bool? b)
+    {
+        return b == true ? "true" : "false";
+    }
+}
+
+@using  Education.BLL.Logic;
+@using Education.DAL.Entities;
+@using Education.BLL.Services.UserServices.Interfaces;
+
+<script src="/lib/jquery/dist/jquery.js"></script>
+
+<script>
+    var Patterns = {};
+    Patterns["email"] = "@Html.Raw(regRegularExpressions.EmailRegex.Replace("\\","\\\\"))";
+    Patterns["phone"] = "@Html.Raw(regRegularExpressions.PhoneRegex.Replace("\\","\\\\"))";
+    Patterns["password"] = "@Html.Raw(regRegularExpressions.PasswordRegex.Replace("\\","\\\\"))";
+
+    var sent = false;
+
+    function AjaxF(to, info, succsessF, errorF) {
+        if (sent) return;
+        sent = true;
+        $.ajax({
+            url: to,
+            method: 'POST',
+            data: info,
+            success: function (data) {
+                succsessF(data);
+                sent = false;
+            },
+            error: function (jqxhr, status, errorMsg) {
+                errorF("Внутреняя ошибка сервера");
+                sent = false;
+            }
+
+        });
+    }
+
+    function Contact(name, id, val, cnf, place, placeHolder, regExString, btnValues, onClick, btnvls) {
+        var Name = name;
+        var Value = val;
+        var Confirm = cnf;
+        var Place = place;
+        var RegEx = RegExp(regExString);
+        var btnvls = btnValues;
+
+        var Child;
+
+        var html = "<input id=\"" + id + "\" type = \"text\" placeholder=\"" + placeHolder + "\"disabled>";
+        html += "<input id=\"" + id + "_ButtonSet\" type = \"button\" value=\"" + btnvls[0] + "\">";
+        html += "<input id=\"" + id + "_ButtonRemove\" type = \"button\" value=\"" + btnvls[1] + "\">";
+        html += "<input id=\"" + id + "_ButtonConfirm\" type = \"button\" value=\"" + btnvls[2] + "\">";
+        place.html(html);
+
+        var SetButton = $("#" + id + "_ButtonSet");
+        var RemoveButton = $("#" + id + "_ButtonRemove");
+        var ConfirmButton = $("#" + id + "_ButtonConfirm");
+
+        var Input = $("#" + id);
+        //---------------------------------
+        var redraw = function () {
+            Input.val(Value);
+            if (Value == null || Value == "") {
+                SetButton.hide();
+                RemoveButton.hide();
+                ConfirmButton.hide();
+                Input.removeAttr('disabled');
+            } else if (Confirm) {
+                SetButton.hide();
+                RemoveButton.show();
+                ConfirmButton.hide();
+                Input.attr('disabled', 'disabled');
+            } else {
+                SetButton.hide();
+                RemoveButton.show();
+                ConfirmButton.show();
+                Input.attr('disabled', 'disabled');
+            }
+            Input.css("border-color", "");
+            if (Child) Child.redraw();
+        };
+
+        var onChange = function () {
+            var val = Input.val();
+            if (val == "") {
+                Input.css("border-color", "");
+                SetButton.hide();
+            }
+            else if (!RegEx.test(val)) {
+                Input.css("border-color", "red");
+                SetButton.hide();
+            }
+            else {
+                SetButton.show();
+                Input.css("border-color", "lightgreen");
+            }
+        };
+
+        var reset = function () {
+            Confirm = false;
+            Value = "";
+            redraw();
+        };
+
+        var set = function (val) {
+            Confirm = false;
+            Value = val;
+            redraw();
+        };
+
+        var confirm = function () {
+            Confirm = true;
+            redraw();
+        };
+
+        var getInput = function () {
+            return Input.val();
+        };
+
+        var IsConfirm = function () {
+            return Confirm === true;
+        }
+
+        var SetChild = function (child) {
+            Child = child;
+        }
+
+        //---------------------------------
+        var res = {
+            getInput,
+            redraw,
+            onChange,
+            reset,
+            set,
+            confirm,
+            IsConfirm,
+            SetChild,
+            Name
+        };
+        //---------------------------------
+        var ob = onClick.bind(res);
+        //----------------------------------
+        SetButton.click(function () { ob(0) });
+        RemoveButton.click(function () { ob(1) });
+        ConfirmButton.click(function () { ob(2) });
+        //-------
+        redraw();
+        //-------
+        Input.bind("input", onChange);
+        return res;
+    }
+
+    function authTypeSelect(id, place, Contacts, selectedID, onClick) {
+        var SelectedID = selectedID;
+        var html = "<select id=\"" + id + "\">";
+        html += "<option value=\"" + 0 + "\">Простой</option>";
+        for (i = 0; i < Contacts.length; i++)
+                html += "<option value=\"" + (i + 1) + "\">" + Contacts[i].Name + "</option>";
+
+        html += "<input id=\"" + id + "_ButtonSet\" type = \"button\" value=\"" + btnvls[0] + "\">";
+        html += "<input id=\"" + id + "_ButtonRemove\" type = \"button\" value=\"" + btnvls[1] + "\">";
+        //---------------
+        place.html(html);
+        //---------------
+        var SetButton = $("#" + id + "_ButtonSet");
+        var RemoveButton = $("#" + id + "_ButtonRemove");
+        var Select = $("#" + id);
+        //--------------------------------------------------
+        var onchange = function () {
+            if (Select.val() == SelectedID) SetButton.hide();
+            else SetButton.show();
+        }
+
+        Select.change(onchange);
+        //--------------------------------------------------
+        var redraw = function () {
+            if (SelectedID != 0 && !Contacts[SelectedID - 1].IsConfirm()) {
+                SelectedID = 0;
+            }
+            Select.val(SelectedID);
+
+            var options = Select.children('option');
+
+            for (i = 1; i < options.length; i++) {
+                if (Contacts[i - 1].IsConfirm()) {
+                    $(options[i]).show();
+                }
+                else $(options[i]).hide();
+            }
+
+            if (SelectedID == 0) {
+                onchange();
+                RemoveButton.hide();
+                Select.removeAttr('disabled');
+                return;
+            }
+            SetButton.hide();
+            RemoveButton.show();
+            Select.attr('disabled', 'disabled');
+        }
+
+        var set = function (id) {
+            SelectedID = id;
+            redraw();
+        };
+
+        var selected = function () {
+            return Select.val();
+        };
+        //----------------------
+        var res = {
+            redraw,
+            selected,
+            set
+        };
+        //--------------------------------------------------
+        var ob = onClick.bind(res);
+
+        SetButton.click(function () { ob(0) });
+        RemoveButton.click(function () { ob(1) });
+
+        redraw();
+        onchange();
+        return res;
+    }
+
+    function PasswordChange(id, place, ih, regExString, onClick) {
+        var RegEx = RegExp(regExString);
+        var html = "<input id=\"" + id + "_old\" type = \"password\" placeholder=\"" + ih[0] + "\">";
+        html += "<input id=\"" + id + "\" type = \"password\" placeholder=\"" + ih[1] + "\">";
+        html += "<input id=\"" + id + "_repeat\" type = \"password\" placeholder=\"" + ih[2] + "\">";
+        html += "<input id=\"" + id + "_set\" type = \"button\" value=\"" + ih[3] + "\">";
+        place.html(html);
+        var SetButton = $("#" + id + "_set");
+        var RepeatInput = $("#" + id + "_repeat");
+        var Input = $("#" + id);
+        var OldPasswordInput = $("#" + id + "_old");
+        //--------------------------------
+        var checkInput = function (inpt) {
+            var val = inpt.val();
+            if (val == "") {
+                inpt.css("border-color", "");
+                return false;
+            }
+            else if (!RegEx.test(val)) {
+                inpt.css("border-color", "red");
+                return false;
+            }
+            else {
+                inpt.css("border-color", "lightgreen");
+                return true;
+            }
+
+        }
+
+        var clear = function () {
+            OldPasswordInput.val("");
+            Input.val("");
+            RepeatInput.val("");
+            onChange();
+        }
+
+        var onChange = function () {
+            var res = checkInput(Input);
+            if (Input.val() != RepeatInput.val()) {
+                RepeatInput.css("border-color", "red");
+                res = false;
+            }
+            else res == res && checkInput(RepeatInput);
+            if (res && OldPasswordInput.val() != "") SetButton.show();
+            else SetButton.hide();
+        }
+        //---------------------------------
+        var res = {
+            clear
+        };
+        //---------------------------------
+        var ob = onClick.bind(res);
+
+        Input.bind("input", onChange);
+        RepeatInput.bind("input", onChange);
+        SetButton.click(function () {
+            ob(OldPasswordInput.val(), Input.val());
+        });
+        //----
+        onChange();
+        //----
+        return res;
+    }
+
+    function ClaimsInfo(path, id, place, text, info) {
+
+
+
+        var html = "<div id=\"" + id + "\"><div id=\"" + id + "_body\"><\/div><\/div>";
+
+        place.html(html);
+
+        var redraw = function () {
+            var html = "<table><tr><td>" + text[0] + "<\/td><td>" + text[1] + "<\/td><td>" + text[2] +"<\/td><\/td>";
+            for (i = 0; i < info.length; i++) {
+                html += "<tr><td>" + info[i].ip + "<\/td><td>" + info[i].loginTime + "<\/td><td>" + info[i].browser + "<\/td><tr>";
+            }
+            html += "<\/table>";
+            $("#" + id + "_body").html(html);
+        }
+
+        redraw();
+
+        return redraw;
+    }
+
+    function Click(id) {
+        alert(id);
+    }
+
+    var Email;
+    var Phone;
+    var Auth;
+    var Claims;
+    var Password;
+
+    var btnvls = ["Задать", "Сбросить", "Потвердить"];
+
+    var ih = ["Ваш старый пароль", "Новый пароль", "Повторите новый пароль","Сменить"];
+
+    var authTypes = [
+        ["@AuthType.Simple", "Простой"],
+        ["@AuthType.Email", "Email"],
+        ["@AuthType.Phone", "Телефон"]
+    ];
+
+
+    //------------------------------------------
+    function ContactAction(contact, id, val, keyValue, setf, removef, confirmf, errorf) {
+        var action = "/api/";
+        var data;
+        var sf;
+        if (id == 0) {
+            action += "Set" + contact;
+            data = { value: val, key: keyValue };
+            sf = setf;
+        }
+        else if (id == 1) {
+            action += "Remove" + contact;
+            data = { key: keyValue };
+            sf = removef;
+        }
+        else if (id == 2) {
+            action += "Confirm" + contact;
+            data = { key: keyValue };
+            sf = confirmf;
+        }
+        AjaxF(action, data, sf, errorf);
+    }
+    //---------------------
+    function AuthTypeAction(id, val, keyValue, setf, removef, errorf) {
+        var action = "/api/";
+        var data;
+        var sf;
+        if (id == 0) {
+            action += "SetAuthType";
+            data = { value: val, key: keyValue };
+            sf = setf;
+        }
+        else if (id == 1) {
+            action += "ResetAuthType";
+            data = { key: keyValue };
+            sf = removef;
+        }
+        AjaxF(action, data, sf, errorf);
+    }
+    //-----------------------------------------
+    function ChangePasswordAction(op, np, key, setpf, errorf) {
+        var action = "/api/SetPassword";
+        var data = {
+            oldPassword: op,
+            newPassword: np,
+            key: key
+        };
+        AjaxF(action, data, setpf, errorf);
+    }
+    //-----------------------------------------
+    function SetPF(data, passwordChange) {
+            var code = data.status;
+            if (code == @((int)ConfirmCode.ContactNotFound)){
+                ErrorMessage("Ошибка сервера (контакт не найден) обратитесь к администратору!");
+            }else if (code == @((int)ConfirmCode.Fail)){
+                KeyMessage("Неправильный ключ!");
+            }else if (code == @((int)ConfirmCode.KeySend)){
+                KeyMessage("Ключ отправлен, срок действия: до " + data.keyTime);
+            }else if (code == @((int)ConfirmCode.NeedNewKey)){
+                ErrorMessage("Срок действия ключа истек");
+                passwordChange.clear();
+            } else if (code == @((int)ConfirmCode.Success)){
+                passwordChange.clear();
+                Message("Данные успешно обновлены");
+            }else if (code == @((int)ConfirmCode.UserNotFound)){
+                ErrorMessage("Неправильный старый пароль");
+            }
+        };
+    //-----------------------------------------
+    function RemoveF(data, contact) {
+            var code = data.status;
+            if (code == @((int)ConfirmCode.ContactNotFound)){
+                ErrorMessage(contact.Name + " не найден!");
+                contact.reset();
+            }else if (code == @((int)ConfirmCode.Fail)){
+                KeyMessage("Неправильный ключ!");
+            }else if (code == @((int)ConfirmCode.KeySend)){
+                KeyMessage("Ключ отправлен, срок действия: до " + data.keyTime);
+            }else if (code == @((int)ConfirmCode.NeedNewKey)){
+                ErrorMessage("Срок действия ключа истек");
+            } else if (code == @((int)ConfirmCode.Success)){
+                contact.reset();
+                Message("Данные успешно обновлены");
+            }else if (code == @((int)ConfirmCode.UserNotFound)){
+                ErrorMessage("Ошибка (пользователь не найден), обратитесь к администратору");
+            }
+        };
+
+        function ConfirmF(data, contact) {
+            var code = data.status;
+            if (code == @((int)ConfirmCode.AlreadyConfimed)){
+                ErrorMessage(contact.Name + " уже потвержден!");
+                contact.confirm();
+            }else if (code == @((int)ConfirmCode.ContactNotFound)){
+                ErrorMessage(contact.Name + " не найден!");
+                contact.reset();
+            }else if (code == @((int)ConfirmCode.Fail)){
+                KeyMessage("Неправильный ключ!");
+            }else if (code == @((int)ConfirmCode.KeySend)){
+                KeyMessage("Ключ отправлен, срок действия: до " + data.keyTime);
+            }else if (code == @((int)ConfirmCode.NeedNewKey)){
+                ErrorMessage("Срок действия ключа истек");
+            }else if (code == @((int)ConfirmCode.Success)){
+                contact.confirm();
+                Message("Данные успешно обновлены");
+            }else if (code == @((int)ConfirmCode.UserNotFound)){
+                ErrorMessage("Ошибка (пользователь не найден), обратитесь к администратору");
+            }
+        };
+
+        function SetF(data, contact) {
+            if (data == @((int)SetContactCode.AlreadySet)){
+                ErrorMessage("Ошибка (Значение уже установленно), перезагрузите страницу");
+            } else if (data == @((int)SetContactCode.Succsess)){
+                contact.set(contact.getInput());
+                Message("Данные успешно обновлены");
+            }else if (data == @((int)SetContactCode.UserNotFound)){
+                ErrorMessage("Ошибка (пользователь не найден), обратитесь к администратору");
+            }else if (data == @((int)SetContactCode.WrongValue)){
+                ErrorMessage("Ошибка (не подходяшее значение), обратитесь к администратору");
+            } else if (data == @((int)SetContactCode.AlreadyExists)){
+                ErrorMessage(contact.Name + ": " + contact.getInput() + " уже присутствует в системе, введите другое значение");
+            }
+        };
+    //------------------------------------------
+        function ResetAt(data, AuthTypeSelect) {
+            var code = data.status;
+            if (code == @((int)ConfirmCode.ContactNotFound)){
+                ErrorMessage("Ошибка (контакт не найден), обратитесь к администратору!");
+            }else if (code == @((int)ConfirmCode.Fail)){
+                KeyMessage("Неправильный ключ!");
+            }else if (code == @((int)ConfirmCode.KeySend)){
+                KeyMessage("Ключ отправлен, срок действия: до " + data.keyTime);
+            }else if (code == @((int)ConfirmCode.NeedNewKey)){
+                ErrorMessage("Срок действия ключа истек");
+            }else if (code == @((int)ConfirmCode.Success)){
+                AuthTypeSelect.set(0);
+                Message("Данные успешно обновлены");
+            }else if (code == @((int)ConfirmCode.UserNotFound)){
+                ErrorMessage("Ошибка (пользователь не найден), обратитесь к администратору");
+            }
+        };
+
+        function SetAt(data, AuthTypeSelect) {
+            var code = data.status;
+            if (code == @((int)ConfirmCode.ContactNotFound)){
+                ErrorMessage("Необходимо сначала задать и потвердить данный контакт!");
+            }else if (code == @((int)ConfirmCode.Fail)){
+                KeyMessage("Неправильный ключ!");
+            }else if (code == @((int)ConfirmCode.KeySend)){
+                KeyMessage("Ключ отправлен, срок действия: до " + data.keyTime);
+            }else if (code == @((int)ConfirmCode.NeedNewKey)){
+                ErrorMessage("Срок действия ключа истек");
+            } else if (code == @((int)ConfirmCode.Success)){
+                AuthTypeSelect.set(AuthTypeSelect.selected());
+                Message("Данные успешно обновлены");
+            }else if (code == @((int)ConfirmCode.UserNotFound)){
+                ErrorMessage("Ошибка (пользователь не найден), обратитесь к администратору");
+            }else if(code == @((int)ConfirmCode.NeedContact)){
+                ErrorMessage("Необходимо сначала сбросить метод авторизации.");
+            }
+        };
+    //------------------------------------------
+    var CurrAction;
+
+    function AuthTypeClickHelper(id, AuthTypeSelect, key) {
+        CurrAction = function (keyv) {
+            AuthTypeAction(id, AuthTypeSelect.selected(), keyv,
+                function (data) {
+                    SetAt(data, AuthTypeSelect);
+                },
+                function (data) {
+                    ResetAt(data, AuthTypeSelect);
+                },
+                ErrorMessage
+            );
+        };
+        CurrAction(key);
+    }
+
+    function ContactClickHelper(contactName, id, contact, key) {
+        CurrAction = function (keyv) {
+            ContactAction(contactName, id, contact.getInput(), keyv,
+                function (data) {
+                    SetF(data, contact);
+                },
+                function (data) {
+                    RemoveF(data, contact);
+                },
+                function (data) {
+                    ConfirmF(data, contact);
+                },
+                ErrorMessage
+            );
+        };
+        CurrAction(key);
+    }
+
+    function ChangePasswordHelper(op,np,key,changePassword) {
+        CurrAction = function (keyv) {
+            ChangePasswordAction(op, np, keyv,
+                function (data) {
+                    SetPF(data, changePassword);
+                },
+                ErrorMessage
+            )
+        };
+        CurrAction(key);
+    }
+    //-----------------------------
+    function Message(text) {
+        HideDarkSpace();
+        $("#Message").html("<font color=\"lightgreen\">" + text + "</font>");
+    }
+
+    function ErrorMessage(text) {
+        HideDarkSpace();
+        $("#Message").html("<font color=\"red\">" + text + "</font>");
+    }
+
+    function KeyMessage(text) {
+        ShowDarkSpace();
+        $('#keyInfo').text(text);
+    }
+    //----------------------------
+
+
+    function ClickEmail(id) {
+        ContactClickHelper("Email", id, this, null);
+    }
+
+    function ClickPhone(id) {
+        ContactClickHelper("Phone", id, this, null);
+    }
+
+    function ClickAuthType(id) {
+        AuthTypeClickHelper(id, this, null);
+    }
+
+    function ClickPassword(oldPassword, newPassword) {
+        ChangePasswordHelper(oldPassword, newPassword, null, this);
+    }
+
+    var ctext = [ "IP адресс","Дата входа","Браузер" ];
+
+    var clms = @Json.Serialize(Model.Claims)
+
+    $(document).ready(function () {
+
+        Email = new Contact("Email", "eID", "@Model.email",@GetBool(Model.emailConfirm), $("#EmailPanel"), "Ваш Email", Patterns["email"], btnvls, ClickEmail, Auth);
+
+        Phone = new Contact("Телефон", "pID", "@Model.phone".replace("&#x2B;","+"),@GetBool(Model.phoneConfirm), $("#PhonePanel"), "Ваш номер телефона", Patterns["phone"], btnvls, ClickPhone, Auth);
+
+        Auth = new authTypeSelect("aID", $("#AuthPanel"), [Email, Phone], @((int)Model.authType), ClickAuthType);
+
+        Email.SetChild(Auth);
+        Phone.SetChild(Auth);
+
+        Password = new PasswordChange("pwID", $("#PasswordPanel"), ih, Patterns["password"], ClickPassword);
+
+        Claims = new ClaimsInfo("api/GetClaims", "cID", $("#ClaimsPanel"), ctext, clms);
+    });
+
+
+
+    //-------------------------
+    function KeyClick() {
+        CurrAction($("#key").val());
+        $("#key").val("");
+    }
+    //-------------------------
+    function HideDarkSpace() {
+        $(".DarkSpace").hide();
+    }
+
+    function ShowDarkSpace() {
+        $(".DarkSpace").show();
+    }
+    //-------------------------
+</script>
+
+<div class="Panel">
+    <div id="Message"></div>
+    <h3>Email:</h3>
+    <div class="DataFields" id="EmailPanel">
+
+    </div>
+    <hr />
+
+    <h3>Телефон:</h3>
+    <div class="DataFields" id='PhonePanel'>
+
+    </div>
+    <hr />
+
+    <h3>Метод авторизации:</h3>
+    <div class="DataFields" id='AuthPanel'>
+
+    </div>
+    <hr />
+
+    <h3>Пароль:</h3>
+    <div class="DataFields" id='PasswordPanel'>
+
+    </div>
+</div>
+<hr />
+<h3>Активные сессии:</h3>
+<div class="DataTable" id='ClaimsPanel'>
+
+</div>
+<br/>
+<div class="DataFields">
+    <div class="Panel">
+        <input type="Button" value="Сбросить все сессии" onclick="window.location='/api/ResetClaims';" />
+    </div>
+</div>
+<div class="DarkSpace" id="DarkSpace" style="display: none">
+    <div class="SecretKeyPanel">
+        <div class="PanelLabel">
+            <text>Подтверждение</text>
+        </div>
+        <div class="PanelBody">
+            <text id="keyInfo"></text><br />
+            <input id="key" type="text" />
+            <div class="Buttons">
+                <input type="button" onclick="KeyClick()" value="Потвердить" />
+                <input type="button" onclick="HideDarkSpace()" value="Отмена" />
+            </div>
+        </div>
+    </div>
+</div>

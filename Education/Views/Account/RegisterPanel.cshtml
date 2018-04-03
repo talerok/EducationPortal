@@ -1,0 +1,205 @@
+﻿<script src="/lib/jquery/dist/jquery.js"></script>
+<script src='https://www.google.com/recaptcha/api.js'></script>
+
+@using  Education.BLL.Logic;
+@using Education.BLL.Services.UserServices.Interfaces;
+@using Education.Captcha;
+
+<script>
+
+    var Patterns = {};
+    var RegExs = {};
+    var Checks = {};
+    Patterns["login"] = "@Html.Raw(regRegularExpressions.LoginRegex.Replace("\\","\\\\"))";
+    Patterns["email"] = "@Html.Raw(regRegularExpressions.EmailRegex.Replace("\\","\\\\"))";
+    Patterns["phone"] = "@Html.Raw(regRegularExpressions.PhoneRegex.Replace("\\","\\\\"))";
+    Patterns["password"] = "@Html.Raw(regRegularExpressions.PasswordRegex.Replace("\\","\\\\"))";
+    Patterns["fullname"] = "@Html.Raw(regRegularExpressions.FullNameRegex.Replace("\\","\\\\"))";
+
+
+    function RegisterAjax(login, pass, email, phone, fullname) {
+        $.ajax({
+            url: '/api/Register',
+            method: 'POST',
+            data: {
+                Login: login,
+                Password: pass,
+                Email: email,
+                PhoneNumber: phone,
+                Fullname: fullname,
+            },
+            dataType: "json",
+            headers: {
+                'Captcha': grecaptcha.getResponse()
+            },
+            success: function (data) {
+                CheckRegResponse(data);
+                HideButton();
+                grecaptcha.reset();
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                ErrorMessage("Ошибка сервера, обратитесь к администратору");
+                HideButton();
+                grecaptcha.reset();
+            }
+        });
+
+    }
+
+    function TryReg() {
+        RegisterAjax($("#login").val(),
+            $("#password").val(),
+            $("#email").val(),
+            $("#phone").val(),
+            $("#fullname").val());
+    }
+
+    function CheckRegResponse(data) {
+        if (data.error != null) {
+            ErrorMessage(data.error);
+        }
+        var code = data.status;
+        if (code == @((int)RegisterResult.Confirm)){
+            window.location.href = '/Account/Login';
+        } else if (code == @((int)RegisterResult.EmailAlreadyExists)){
+            ErrorMessage("Аккаунт с таким email уже существует");
+        } else if (code == @((int)RegisterResult.LoginAlreadyExists)){
+            ErrorMessage("Аккаунт с таким Именем уже существует");
+        } else if (code == @((int)RegisterResult.NeedContact)){
+            ErrorMessage("Необходим хотябы 1 контакт (телефон или email)");
+        } else if (code == @((int)RegisterResult.PhoneAlreadyExists)){
+            ErrorMessage("Аккаунт с таким телефоном уже существует");
+        } else if (code == @((int)RegisterResult.WrongEmail)){
+            ErrorMessage("Неправильный формат email");
+        } else if (code == @((int)RegisterResult.WrongFullName)){
+            ErrorMessage("Неправильный формат ФИО");
+        } else if (code == @((int)RegisterResult.WrongLogin)){
+            ErrorMessage("Неправильный формат имени аккаунты");
+        } else if (code == @((int)RegisterResult.WrongPassword)){
+            ErrorMessage("Неправильный формат пароля");
+        } else if (code == @((int)RegisterResult.WrongPhone)){
+            ErrorMessage("Неправильный формат телефона");
+        } 
+
+    }
+
+    function ErrorMessage(text) {
+        $("#error").text(text);
+
+    }
+
+    function checkInput(name) {
+        if (RegExs[name] == null) {
+            if (Patterns[name] == null) return true;
+            RegExs[name] = new RegExp(Patterns[name]);
+        }
+        var inpt = $('#' + name).val();
+        return RegExs[name].test(inpt);
+    }
+
+    function InputListener(input) {
+
+        if ($(input).val() == "") {
+            $(input).css("border-color", "");
+            Checks[input.id] = 0;
+        }else if (!checkInput(input.id)) {
+            $(input).css("border-color", "red");
+            Checks[input.id] = 1;
+        }
+        else {
+            $(input).css("border-color", "lightgreen");
+            Checks[input.id] = 2;
+        }
+        ShowButton();
+    }
+
+    function PasswordConfirmListener(password, confirmpassword) {
+        var cfpv = confirmpassword.val();
+        var cfvid = confirmpassword.get(0).id;
+        var psv = password.val();
+        if (cfpv == "") {
+            Checks[cfvid] = 0;
+            confirmpassword.css("border-color", "");
+        } else if (cfpv != psv) {
+            confirmpassword.css("border-color", "red");
+            Checks[cfvid] = 1;
+        }
+        else {
+            confirmpassword.css("border-color", "lightgreen");
+            Checks[cfvid] = 2
+        }
+        ShowButton();
+    }
+
+    function ShowButton() {
+        var button = $('#register');
+        if (CheckInputs()) button.show();
+        else HideButton();
+
+    }
+
+    function HideButton() {
+        $('#register').hide();
+    }
+
+    function isCaptchaChecked() {
+        return grecaptcha && grecaptcha.getResponse().length !== 0;
+    }
+
+    function CheckInputs() {
+        if (!isCaptchaChecked()) return false;
+        var res = 0;
+        var count = 0;
+        $.each(Checks, function (index, value) {
+            count++;
+            res += value;
+        });
+        if (res == 2 * count) return true;
+        else if (res == 2 * (count - 1) && Checks['email'] == 2 ^ Checks['phone'] == 2) return true;
+        else return false;
+    }
+
+    $(document).ready(function () {
+        var inputs = $("input[type='text'],input[type='email'],input[type='password']");
+        $.each(inputs, function (index, value) {
+            if (Patterns[value.id] == null) return;
+            $(value).bind("input", function () { InputListener(value) });
+            Checks[value.id] = 0;
+        });
+        var cfp = $("#password_confirm");
+        cfp.bind("input", function () { PasswordConfirmListener($("#password"), cfp); });
+        $("#password").bind("input", function () { PasswordConfirmListener($("#password"), cfp); });
+        Checks[cfp.get(0).id] = 0;
+        $('#register').hide();
+    });
+
+
+
+</script>
+
+<div class="RegInfo">
+
+    <hr>
+    <p><strong>Требования к аккаунту:</strong></p>
+    <ul>
+        <li><strong>Имя пользователя:</strong> длина от 4 до 20 символов, только латинские символы и символ '-'</li>
+        <li><strong>Контактные данные:</strong> необходимо указать телефон или email, или и то и другое</li>
+        <li><strong>ФИО:</strong> Только кирилические символы, пример: "Иванов Иван Иванович"</li>
+        <li><strong>Пароль:</strong> длина от 6 символов, наличие минимум заглавной и строчной латинских символов и одной цифры</li>
+    </ul>
+    <hr>
+</div>
+
+<div class="Panel">
+    <div class="DataFields">
+        <input id="login" type="text" placeholder="Имя" />
+        <input id="email" type="email" placeholder="Почта" />
+        <input id="phone" type="text" placeholder="Номер телефона" />
+        <input id="fullname" type="text" placeholder="ФИО Полностью" />
+        <input id="password" type="password" placeholder="Пароль" />
+        <input id="password_confirm" type="password" placeholder="Повторите пароль" />
+    </div>
+    <div class="g-recaptcha" data-callback="ShowButton" data-sitekey="@Html.Raw(CaptchaInfo.Key) "></div>
+    <text id="error" class="ErrorMessage">  </text>
+    <input class="Button" id="register" type="button" onclick="TryReg()" value="Зарегестрироваться" />
+</div>

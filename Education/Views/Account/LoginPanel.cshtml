@@ -1,0 +1,123 @@
+﻿@using Education.BLL.Services.UserServices.Interfaces;
+@using Education.DAL.Entities;
+
+<script src="/lib/jquery/dist/jquery.js"></script>
+<script src='https://www.google.com/recaptcha/api.js'></script>
+
+<script>
+    function LoginAjax(login, pass, key) {
+        $.ajax({
+            url: '/api/Auth',
+            method: 'POST',
+            data: {
+                Login: login,
+                Password: pass,
+                SecretKey: key
+            },
+            success: function (data) {
+                CheckAuthResponse(data);
+            },
+            error: function (jqxhr, status, errorMsg) {
+                ErrorMessage("Внутреняя ошибка сервера");
+                HideButton();
+            }
+ 
+        });
+    }
+
+
+    function CheckAuthResponse(data) {
+        if (data.status == 0) SuccsessStatus();
+        else if (data.status == 5) KeySentStatus(data);
+        else if (data.error != null) ErrorMessage(data.error);
+        else if (data.status == 4) NeedNewKeyStatus();
+        else if (data.status == 3) WrongKey();
+        else ErrorStatus(data);               
+    }
+
+    function SuccsessStatus() {
+        window.location.href = '/';
+    }
+
+    function WrongKey() {
+        InfoMessage("Неправильный ключ!");
+
+    }
+
+    function NeedNewKeyStatus() {
+        $("#key").val("");
+        ErrorMessage("Срок действия ключа истек!");
+    }
+
+    function KeySentStatus(data) {
+        
+        var SendTo;
+        if (data.authType == 1) SendTo = "Почту";
+        else if (data.authType == 2) SendTo = "Телефон";
+        InfoMessage("Ключ отправлен на " + SendTo + ", срок действия: " + data.keyTime);
+        $("#DarkSpace").show();
+        
+    }
+
+    function ErrorStatus(data) {
+        if (data.status == 1) ErrorMessage("Пользователь не найден!");
+        else if (data.status == 2) ErrorMessage("Пользователь забанен, дата разбана: !" + data.keyTime);
+        else if (data.status == 6) ErrorMessage("Внутреняя ошибка, обратитесь к администратору!");
+    }
+
+    function LoginClick() {
+        LoginAjax($("#login").val(), $("#password").val(), $("#key").val());  
+    }
+
+    function ErrorMessage(text) {
+        HideDarkSpace();
+        $('#ErrorMessage').text(text);
+
+    }
+
+    function InfoMessage(text) {
+        $("#info").text(text);
+
+    }
+
+    function HideDarkSpace() {
+        $("#key").val("");
+        $("#DarkSpace").hide();
+
+    }
+
+    //-----------------------
+    $(document).ready(function () {
+        HideDarkSpace();
+    });
+</script>
+
+<div class="Panel">
+    <div class="DataFields">
+        <input id="login" type="text" placeholder="Имя акканута/email/телефон" /><br />
+        <input id="password" type="password" placeholder="Пароль" /><br />
+    </div>
+    <div class="ErrorMessage" id="ErrorMessage">
+    </div>
+    <input class="Button" type="button" id="Login" onclick="LoginClick()" value="Войти" />
+    <a href="/Account/Restore">Востановить пароль</a>
+    <a href="/Account/Register">Регистрация</a>
+</div>
+
+<div class="DarkSpace" id="DarkSpace">
+    <div class="SecretKeyPanel">
+        <div class="PanelLabel">
+            <text>Двухфакторная авторизация</text>
+        </div>
+        <div class="PanelBody">
+            <text id="info"></text><br />
+            <input id="key" type="text" />
+            <text id="keyTime"> </text>
+            <div class="Buttons">
+                <input type="button" onclick="LoginClick()" value="Войти" />
+                <input type="button" onclick="HideDarkSpace()" value="Отмена" />
+            </div>
+        </div>
+    </div>
+</div>
+

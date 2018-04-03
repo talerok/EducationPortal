@@ -1,0 +1,148 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+
+.Panel .error{
+    color: red;
+}
+
+.DataTable{
+    width: 700px;
+}
+
+.DataTable table, .DataTable table tr, .DataTable table tr td {
+    border-style: solid;
+    text-align: center;
+}
+
+.DataTable table tr:first-child{
+        font-weight: 600;
+}
+
+.DataFields input[type="password"], .DataFields input[type="text"], .DataFields input[type="email"], .DataFields select {
+    background-color: white;
+    border-left: 0px;
+    border-right: 0px;
+    border-top: 0px;
+    border-color: black;
+    margin-bottom: 5px;
+    outline: none;
+    font-size: 18px;
+    width: 100%;
+}
+
+.Button, .DataFields input[type="button"] {
+    width: 100%;
+    font-size: 13px;
+    padding: 6px 0 4px 10px;
+    border: 1px solid #cecece;
+    background: white;
+    color: black;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.ErrorMessage{
+    color: red;
+}
+
+.SecretKeyPanel {
+    display: table;
+    width: 300px;
+    overflow: auto;
+    margin: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-color: white;
+}
+
+.SecretKeyPanel .PanelBody .Buttons input[type="button"]{
+    position: absolute;
+    width: 100px;
+}
+
+.SecretKeyPanel .PanelBody .Buttons input[type="button"]:nth-child(1){
+    left: 10px;
+}
+
+.SecretKeyPanel .PanelBody input[type="text"]{
+    width: 100%;
+}
+
+.SecretKeyPanel .PanelBody .Buttons input[type="button"]:nth-child(2){
+    right: 10px;
+}
+
+
+.SecretKeyPanel .PanelLabel{
+    width: 100%;
+    background-color: #222222;
+    color: white;
+}
+
+.SecretKeyPanel .PanelBody{
+    margin: 10px;
+    word-wrap: break-word;
+    margin-bottom: 40px;
+}
+
+.PanelBody .Buttons {
+    margin-top: 5px;
+}
+
+.PanelLabel text{
+    margin-left: 5px;
+}
+
+.DarkSpace {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #000000d4;
+    margin: auto;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.Panel{
+    width: 300px;
+}
+
+
+/* Carousel */
+.carousel-caption p {
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+/* Make .svg files in the carousel display properly in older browsers */
+.carousel-inner .item img[src$=".svg"] {
+    width: 100%;
+}
+
+/* QR code generator */
+#qrCode {
+    margin: 15px;
+}
+
+/* Hide/rearrange for smaller screens */
+@media screen and (max-width: 767px) {
+    /* Hide captions */
+    .carousel-caption {
+        display: none;
+    }
+}

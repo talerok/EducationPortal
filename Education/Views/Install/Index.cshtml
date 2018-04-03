@@ -1,0 +1,13 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h2>Install Service</h2>
+
+@using (Html.BeginForm("Init", "Install", FormMethod.Post))
+{
+    <input type="text" name="login" />
+    <input type="password" name="password" />
+    <p><input type="submit" value="Создать" /></p>
+}
