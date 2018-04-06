@@ -10,7 +10,6 @@ namespace Education.DAL.Repositories
     {
         private EFContext dbContext;
         //-------------------------------
-        //-------------------------------
         private IKernel kernel = new StandardKernel();
 
         private void Binding()
@@ -38,6 +37,11 @@ namespace Education.DAL.Repositories
             AuthKeyRepository = kernel.Get<IRepos<Key>>();
             BanRepository = kernel.Get<IRepos<Ban>>();
             UserClaimRepository = kernel.Get<IRepos<UserClaim>>();
+            //Forum
+            MessageRepository = kernel.Get<IRepos<Message>>();
+            ThemeRepository = kernel.Get<IRepos<Theme>>();
+            SectionRepository = kernel.Get<IRepos<Section>>();
+            GroupRepository = kernel.Get<IRepos<Group>>();
         }
 
         #region Repos
@@ -53,6 +57,14 @@ namespace Education.DAL.Repositories
         public IRepos<Ban> BanRepository { get; private set; }
 
         public IRepos<UserClaim> UserClaimRepository { get; private set; }
+
+        public IRepos<Message> MessageRepository { get; private set; }
+
+        public IRepos<Theme> ThemeRepository { get; private set; }
+
+        public IRepos<Section> SectionRepository { get; private set; }
+
+        public IRepos<Group> GroupRepository { get; private set; }
         #endregion
     }
 }

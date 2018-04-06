@@ -13,5 +13,10 @@ namespace Education.DAL.Interfaces
         IRepos<Key> AuthKeyRepository { get; }
         IRepos<Ban> BanRepository { get; }
         IRepos<UserClaim> UserClaimRepository { get; }
+        //------------Forums
+        IRepos<Message> MessageRepository { get; }
+        IRepos<Theme> ThemeRepository { get; }
+        IRepos<Section> SectionRepository { get; }
+        IRepos<Group> GroupRepository { get; }
     }
 }
