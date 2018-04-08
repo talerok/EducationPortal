@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Education.DAL.Entities
@@ -20,6 +21,7 @@ namespace Education.DAL.Entities
         public short Level { get; set; }
         public AuthType authType { get; set; }
         public virtual Ban Ban { get; set;}
+        public virtual ICollection<UserGroup> Groups { get; set; }
         public User() { }
     }
 }

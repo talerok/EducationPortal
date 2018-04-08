@@ -22,6 +22,9 @@ namespace Education.BLL.Services.UserServices.Init
 
         public void InitAdmin(string login, string password)
         {
+            //-----------------------
+
+            //-----------------------
             var hasher = new SHA256Hasher();
             CheckAdmin(login);
             Data.UserRepository.Add(new DAL.Entities.User

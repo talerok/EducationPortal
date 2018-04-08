@@ -292,27 +292,7 @@
         return res;
     }
 
-    function ClaimsInfo(path, id, place, text, info) {
-
-
-
-        var html = "<div id=\"" + id + "\"><div id=\"" + id + "_body\"><\/div><\/div>";
-
-        place.html(html);
-
-        var redraw = function () {
-            var html = "<table><tr><td>" + text[0] + "<\/td><td>" + text[1] + "<\/td><td>" + text[2] +"<\/td><\/td>";
-            for (i = 0; i < info.length; i++) {
-                html += "<tr><td>" + info[i].ip + "<\/td><td>" + info[i].loginTime + "<\/td><td>" + info[i].browser + "<\/td><tr>";
-            }
-            html += "<\/table>";
-            $("#" + id + "_body").html(html);
-        }
-
-        redraw();
-
-        return redraw;
-    }
+    
 
     function Click(id) {
         alert(id);
@@ -580,7 +560,7 @@
 
     var ctext = [ "IP адресс","Дата входа","Браузер" ];
 
-    var clms = @Json.Serialize(Model.Claims)
+    
 
     $(document).ready(function () {
 
@@ -594,8 +574,6 @@
         Phone.SetChild(Auth);
 
         Password = new PasswordChange("pwID", $("#PasswordPanel"), ih, Patterns["password"], ClickPassword);
-
-        Claims = new ClaimsInfo("api/GetClaims", "cID", $("#ClaimsPanel"), ctext, clms);
     });
 
 
@@ -644,7 +622,14 @@
 <hr />
 <h3>Активные сессии:</h3>
 <div class="DataTable" id='ClaimsPanel'>
+    <table>
+        <tr><td>IP адрес</td><td>Время авторизации</td><td>Браузер</td></tr>
+        @foreach(var a in Model.Claims)
+        {
+            <tr><td>@a.Ip</td><td>@a.LoginTime</td><td>@a.Browser</td></tr>
 
+        }
+    </table>
 </div>
 <br/>
 <div class="DataFields">

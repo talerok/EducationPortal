@@ -18,5 +18,6 @@ namespace Education.DAL.Interfaces
         IRepos<Theme> ThemeRepository { get; }
         IRepos<Section> SectionRepository { get; }
         IRepos<Group> GroupRepository { get; }
+        IRepos<UserGroup> UserGroupRepository { get; }
     }
 }

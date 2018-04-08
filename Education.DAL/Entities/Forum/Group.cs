@@ -7,7 +7,11 @@ namespace Education.DAL.Entities
     public class Group : Entity
     {
         public string Name { get; set; }
-        public ICollection<User> Users { get; set; }
-        public ICollection<User> Owners { get; set; }
+        public virtual ICollection<UserGroup> Users { get; set; }
+
+        public Group()
+        {
+            Users = new List<UserGroup>();
+        }
     }
 }

@@ -26,10 +26,15 @@ namespace Education.DAL.Repositories
             .Options;
             dbContext = new EFContext(options);
             Binding();
-            Init();
+            InitAll();
         }
 
-        void Init()
+        void Init<T>(IRepos<T> repos) where T : class
+        {
+            repos = kernel.Get<IRepos<T>>();
+        }
+
+        void InitAll()
         {
             UserInfoRepository = kernel.Get<IRepos<UserInfo>>();
             UserRepository = kernel.Get<IRepos<User>>();
@@ -42,6 +47,7 @@ namespace Education.DAL.Repositories
             ThemeRepository = kernel.Get<IRepos<Theme>>();
             SectionRepository = kernel.Get<IRepos<Section>>();
             GroupRepository = kernel.Get<IRepos<Group>>();
+            UserGroupRepository = kernel.Get<IRepos<UserGroup>>();
         }
 
         #region Repos
@@ -65,6 +71,8 @@ namespace Education.DAL.Repositories
         public IRepos<Section> SectionRepository { get; private set; }
 
         public IRepos<Group> GroupRepository { get; private set; }
+
+        public IRepos<UserGroup> UserGroupRepository { get; private set; }
         #endregion
     }
 }
