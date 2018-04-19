@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Education.DAL.Entities;
 using Education.DAL.Interfaces;
-using Ninject;
 using Microsoft.EntityFrameworkCore.Proxies;
+using System;
 
 namespace Education.DAL.Repositories
 {
@@ -10,44 +10,47 @@ namespace Education.DAL.Repositories
     {
         private EFContext dbContext;
         //-------------------------------
-        private IKernel kernel = new StandardKernel();
-
-        private void Binding()
-        {
-            kernel.Bind(typeof(IRepos<>)).To(typeof(EFRepos<>)).WithConstructorArgument("context", dbContext);
-        }
-
-        public EFUOW()
+        public EFUOW(string connSrting)
         {
             var optionsBuilder = new DbContextOptionsBuilder<EFContext>();
             var options = optionsBuilder
                 .UseLazyLoadingProxies()
-                .UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=EDC;Trusted_Connection=True;")
+                .UseSqlServer(connSrting)
             .Options;
             dbContext = new EFContext(options);
-            Binding();
             InitAll();
         }
 
-        void Init<T>(IRepos<T> repos) where T : class
+        private IRepos<T> InitRepos<T>() where T : class
         {
-            repos = kernel.Get<IRepos<T>>();
+            return new EFRepos<T>(dbContext);
         }
 
         void InitAll()
         {
-            UserInfoRepository = kernel.Get<IRepos<UserInfo>>();
-            UserRepository = kernel.Get<IRepos<User>>();
-            ContactRepository = kernel.Get<IRepos<Contact>>();
-            AuthKeyRepository = kernel.Get<IRepos<Key>>();
-            BanRepository = kernel.Get<IRepos<Ban>>();
-            UserClaimRepository = kernel.Get<IRepos<UserClaim>>();
+            UserInfoRepository = InitRepos<UserInfo>();
+            UserRepository = InitRepos <User>();
+            ContactRepository = InitRepos <Contact>();
+            AuthKeyRepository = InitRepos <Key>();
+            BanRepository = InitRepos <Ban>();
+            UserClaimRepository = InitRepos <UserClaim>();
             //Forum
-            MessageRepository = kernel.Get<IRepos<Message>>();
-            ThemeRepository = kernel.Get<IRepos<Theme>>();
-            SectionRepository = kernel.Get<IRepos<Section>>();
-            GroupRepository = kernel.Get<IRepos<Group>>();
-            UserGroupRepository = kernel.Get<IRepos<UserGroup>>();
+            MessageRepository = InitRepos <Message>();
+            ThemeRepository = InitRepos <Theme>();
+            SectionRepository = InitRepos <Section>();
+            GroupRepository = InitRepos <Group>();
+            UserGroupRepository = InitRepos <UserGroup>();
+        }
+
+        public void SaveChanges()
+        {
+            dbContext.SaveChanges();
+        }
+
+        public void Dispose()
+        {
+            dbContext.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         #region Repos

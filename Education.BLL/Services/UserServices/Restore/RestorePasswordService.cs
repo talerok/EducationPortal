@@ -15,19 +15,19 @@ namespace Education.BLL.Services.UserServices.Restore
     {
         private IAuthKeyService emailService;
         private IAuthKeyService phoneService;
-        private IUOW Data;
+        private IUOWFactory DataFactory;
         private IRegValidator regValidator;
         private IPassHasher passHasher;
-        public RestorePasswordService(IUOW uow, IAuthKeyService emailKeyService, IAuthKeyService phoneKeyService, IRegValidator reg, IPassHasher pHasher)
+        public RestorePasswordService(IUOWFactory uowf, IAuthKeyService emailKeyService, IAuthKeyService phoneKeyService, IRegValidator reg, IPassHasher pHasher)
         {
-            Data = uow;
+            DataFactory = uowf;
             emailService = emailKeyService;
             phoneService = phoneKeyService;
             regValidator = reg;
             passHasher = pHasher;
         }
 
-        private User GetUser(string login)
+        private User GetUser(string login, IUOW Data)
         {
             return Data.UserRepository.Get().FirstOrDefault(x => 
                 x.Login == login.ToLower()
@@ -39,36 +39,41 @@ namespace Education.BLL.Services.UserServices.Restore
 
         public RestoreResult Restore(string login, string password = null, string key = null)
         {
-            var user = GetUser(login.ToLower());
-            if (user == null) return new RestoreResult { Status = RestoreCode.UserNotFound };
-            if (key == null) {
-                if (user.Phone != null && user.Phone.Confirmed)
-                    return new RestoreResult { Status = RestoreCode.KeySent, SendTo = AuthType.Phone, KeyTime = phoneService.Generate(user.Phone) };
-                else if (user.Email != null && user.Email.Confirmed)
-                    return new RestoreResult { Status = RestoreCode.KeySent, SendTo = AuthType.Email, KeyTime = emailService.Generate(user.Email) };
-                else return new RestoreResult { Status = RestoreCode.NeedContact };
-            }
-
-            KeyStatus status;
-
-            if (user.Phone != null && user.Phone.Confirmed)
-                status = phoneService.Check(user.Phone, key);
-            else if (user.Email != null && user.Email.Confirmed)
-                status = emailService.Check(user.Email, key);
-            else return new RestoreResult { Status = RestoreCode.NeedContact };
-
-            if (status == KeyStatus.Success)
+            using (var Data = DataFactory.Get())
             {
-                if (String.IsNullOrEmpty(password) || regValidator.checkPassword(password) != CheckResult.Ok)
-                    return new RestoreResult { Status = RestoreCode.WrongPassword };
+                var user = GetUser(login.ToLower(), Data);
+                if (user == null) return new RestoreResult { Status = RestoreCode.UserNotFound };
+                if (key == null)
+                {
+                    if (user.Phone != null && user.Phone.Confirmed)
+                        return new RestoreResult { Status = RestoreCode.KeySent, SendTo = AuthType.Phone, KeyTime = phoneService.Generate(user.Phone,Data) };
+                    else if (user.Email != null && user.Email.Confirmed)
+                        return new RestoreResult { Status = RestoreCode.KeySent, SendTo = AuthType.Email, KeyTime = emailService.Generate(user.Email,Data) };
+                    else return new RestoreResult { Status = RestoreCode.NeedContact };
+                }
 
-                user.Password = passHasher.Get(password);
-                Data.UserRepository.Edited(user);
-                return new RestoreResult { Status = RestoreCode.Succsess };
+                KeyStatus status;
+
+                if (user.Phone != null && user.Phone.Confirmed)
+                    status = phoneService.Check(user.Phone, key, Data);
+                else if (user.Email != null && user.Email.Confirmed)
+                    status = emailService.Check(user.Email, key, Data);
+                else return new RestoreResult { Status = RestoreCode.NeedContact };
+
+                if (status == KeyStatus.Success)
+                {
+                    if (String.IsNullOrEmpty(password) || regValidator.checkPassword(password) != CheckResult.Ok)
+                        return new RestoreResult { Status = RestoreCode.WrongPassword };
+
+                    user.Password = passHasher.Get(password);
+                    Data.UserRepository.Edited(user);
+                    Data.SaveChanges();
+                    return new RestoreResult { Status = RestoreCode.Succsess };
+                }
+                else if (status == KeyStatus.KeyTimeEnded)
+                    return new RestoreResult { Status = RestoreCode.NeedNewKey };
+                else return new RestoreResult { Status = RestoreCode.WorngKey };
             }
-            else if (status == KeyStatus.KeyTimeEnded)
-                return new RestoreResult { Status = RestoreCode.NeedNewKey };
-            else return new RestoreResult { Status = RestoreCode.WorngKey };
         }
     }
 }

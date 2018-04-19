@@ -16,14 +16,12 @@ namespace Education.BLL.Services.UserServices.Auth
         private Regex PassRegex = new Regex(regRegularExpressions.PasswordRegex);
         private Regex FullNameRegex = new Regex(regRegularExpressions.FullNameRegex);
 
-        private IUOW Data;
-
-        public RegValidator(IUOW uow)
+        public RegValidator()
         {
-            Data = uow;
+
         }
 
-        public CheckResult checkEmail(string email)
+        public CheckResult checkEmail(string email, IUOW Data)
         {
             if (email == null || !EmailRegex.IsMatch(email)) return CheckResult.WrongValue;
             if (Data.UserRepository.Get().FirstOrDefault(x => x.Email.Value == email) != null)
@@ -31,7 +29,7 @@ namespace Education.BLL.Services.UserServices.Auth
             return CheckResult.Ok;
         }
 
-        public CheckResult checkPhone(string phone)
+        public CheckResult checkPhone(string phone, IUOW Data)
         {
             if (phone == null || !PhoneRegex.IsMatch(phone)) return CheckResult.WrongValue;
             if (Data.UserRepository.Get()
@@ -40,7 +38,7 @@ namespace Education.BLL.Services.UserServices.Auth
             return CheckResult.Ok;
         }
 
-        public CheckResult checkLogin(string login)
+        public CheckResult checkLogin(string login, IUOW Data)
         {
             if (login == null || !LoginRegex.IsMatch(login))
                 return CheckResult.WrongValue;
@@ -63,14 +61,14 @@ namespace Education.BLL.Services.UserServices.Auth
             return CheckResult.Ok;
         }
 
-        public RegisterResult Check(UserDTO userDTO)
+        public RegisterResult Check(UserDTO userDTO, IUOW Data)
         {
             bool emailExists = !String.IsNullOrEmpty(userDTO.Email);
             bool phoneExists = !String.IsNullOrEmpty(userDTO.PhoneNumber);
 
             if (!emailExists && !phoneExists) return RegisterResult.NeedContact;
 
-            var Check = checkLogin(userDTO.Login);
+            var Check = checkLogin(userDTO.Login, Data);
             if (Check == CheckResult.AlreadyExists) return RegisterResult.LoginAlreadyExists;
             else if (Check == CheckResult.WrongValue) return RegisterResult.WrongLogin;
 
@@ -79,14 +77,14 @@ namespace Education.BLL.Services.UserServices.Auth
 
             if (phoneExists)
             {
-                Check = checkPhone(userDTO.PhoneNumber);
+                Check = checkPhone(userDTO.PhoneNumber, Data);
                 if (Check == CheckResult.AlreadyExists) return RegisterResult.PhoneAlreadyExists;
                 else if (Check == CheckResult.WrongValue) return RegisterResult.WrongPhone;
             }
 
             if (emailExists)
             {
-                Check = checkEmail(userDTO.Email);
+                Check = checkEmail(userDTO.Email, Data);
                 if (Check == CheckResult.AlreadyExists) return RegisterResult.EmailAlreadyExists;
                 else if (Check == CheckResult.WrongValue) return RegisterResult.WrongEmail;
             }

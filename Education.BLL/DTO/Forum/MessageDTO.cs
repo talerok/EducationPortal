@@ -10,6 +10,7 @@ namespace Education.BLL.DTO.Forum
         public UserPublicInfoDTO Owner { get; set; }
         public string Text { get; set; }
         public DateTime Time { get; set; }
-        public bool Edited { get; set; }
+        public UserPublicInfoDTO LastEditor { get; set; }
+        public DateTime LastEditTime { get; set; }
     }
 }

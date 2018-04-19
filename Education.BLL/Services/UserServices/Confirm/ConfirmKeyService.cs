@@ -16,33 +16,37 @@ namespace Education.BLL.Services.UserServices.Confirm
     {
         private IMessenger Messager;
         private IKeyGenerator KeyGenerator;
-        private IUOW Data;
 
-        public ConfirmKeyService(IUOW data, IKeyGenerator kg, IMessenger msgr)
+        public ConfirmKeyService(IKeyGenerator kg, IMessenger msgr)
         {
             Messager = msgr;
-            Data = data;
             KeyGenerator = kg;
         }
 
-        public KeyStatus Check(Contact contact, string Key)
+        private void RemoveKey(Contact contact, IUOW Data)
+        {
+            Data.AuthKeyRepository.Delete(contact.ConfirmKey);
+            Data.SaveChanges();
+        }
+
+        public KeyStatus Check(Contact contact, string Key, IUOW Data)
         {
             if (contact == null) throw new KeyException(KeyError.ContactNotFound);
             if (contact.ConfirmKey == null) return KeyStatus.Fail;
             if (contact.ConfirmKey.EndTime < DateTime.Now)
             {
-                Data.AuthKeyRepository.Delete(contact.ConfirmKey);
+                RemoveKey(contact, Data);
                 return KeyStatus.KeyTimeEnded;
             }
             if (contact.ConfirmKey.Value == Key)
             {
-                Data.AuthKeyRepository.Delete(contact.ConfirmKey);
+                RemoveKey(contact, Data);
                 return KeyStatus.Success;
             }
             return KeyStatus.Fail;
         }
 
-        public DateTime Generate(Contact contact)
+        public DateTime Generate(Contact contact, IUOW Data)
         {
             if (contact == null) throw new KeyException(KeyError.ContactNotFound);
             if (contact.ConfirmKey != null)
@@ -54,6 +58,7 @@ namespace Education.BLL.Services.UserServices.Confirm
             }
             contact.ConfirmKey = KeyGenerator.Get();
             Data.ContactRepository.Edited(contact);
+            Data.SaveChanges();
             Messager.Send(contact.Value, "Your key: " + contact.ConfirmKey.Value);
             return contact.ConfirmKey.EndTime;
         }

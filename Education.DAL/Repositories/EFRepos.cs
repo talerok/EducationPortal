@@ -24,31 +24,26 @@ namespace Education.DAL.Repositories
         public void Add(TEntity item)
         {
             dbSet.Add(item);
-            dbContext.SaveChanges();
         }
 
         public void Add(IEnumerable<TEntity> items)
         {
             dbSet.AddRange(items);
-            dbContext.SaveChanges();
         }
 
         public void Delete(TEntity item)
         {
             dbContext.Entry(item).State = EntityState.Deleted;
-            dbContext.SaveChanges();
         }
 
         public void Delete(IEnumerable<TEntity> items)
         {
             dbSet.RemoveRange(items);
-            dbContext.SaveChangesAsync();
         }
 
         public void Edited(TEntity item)
         {
             dbContext.Entry(item).State = EntityState.Modified;
-            dbContext.SaveChanges();
 
         }
 
@@ -58,7 +53,6 @@ namespace Education.DAL.Repositories
             {
                 dbContext.Entry(item).State = EntityState.Modified;
             }
-            dbContext.SaveChanges();
         }
 
         public IQueryable<TEntity> Get()

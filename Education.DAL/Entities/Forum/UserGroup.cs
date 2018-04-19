@@ -7,7 +7,7 @@ namespace Education.DAL.Entities
     public enum UserGroupStatus
     {
         request,
-        allowed,
+        member,
         owner
     }
     public class UserGroup

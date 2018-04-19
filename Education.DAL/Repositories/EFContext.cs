@@ -34,6 +34,9 @@ namespace Education.DAL.Repositories
             modelBuilder.Entity<UserGroup>()
                 .HasOne(x => x.User).WithMany(x => x.Groups).HasForeignKey(x => x.UserId);
             //--------------------------------------------------
+            modelBuilder.Entity<Group>().HasMany(x => x.Sections).WithOne(x => x.Group);
+            modelBuilder.Entity<Section>().HasMany(x => x.Themes).WithOne(x => x.Section);
+            modelBuilder.Entity<Theme>().HasMany(x => x.Messages).WithOne(x => x.Theme);
         }
 
 

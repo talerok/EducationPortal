@@ -30,57 +30,54 @@ namespace Education
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            string connString = @"Server=(localdb)\mssqllocaldb;Database=EDC;Trusted_Connection=True;";
             //----------------------------------------------------
             IMessenger messenger_sms = new SmsMessenger();
             IMessenger messenger_email = new EmailMessenger();
             IPassHasher passHasher = new SHA256Hasher();
             IKeyGenerator smallKeyGenerator = new SmallKeyGenerator();
             IKeyGenerator bigKeyGenerator = new BigKeyGenerator();
+            IRegValidator regValidator = new RegValidator();
+            IUOWFactory UOWFactory = new EFUOWFactory(connString);
             //----------------------------------------------------
-            services.AddTransient<IUOW, EFUOW>();
-            services.AddTransient<IClaimService, ClaimService>();
-            services.AddSingleton<IInitDBService, InitDBService>();
-            //-----------------------------------------------------
-            services.AddTransient<IUserService, UserAuthService>(
+            IClaimService claimService = new ClaimService(UOWFactory);
+            //----------------------------------------------------
+            services.AddSingleton<IUOWFactory, IUOWFactory>(
                 serviceProvider =>
                 {
-                    var uow = new EFUOW();
+                    return UOWFactory;
+                }
+            );
+
+            services.AddSingleton<IClaimService, ClaimService>();
+            //-----------------------------------------------------
+
+            services.AddSingleton<IUserService, UserAuthService>(
+                serviceProvider =>
+                {
                     return new UserAuthService(
-                        uow, 
-                        new AuthKeyService(
-                                uow,
-                                smallKeyGenerator,
-                                messenger_sms
-                            ),
-                        new AuthKeyService(
-                                uow,
-                                smallKeyGenerator,
-                                messenger_email
-                            ),
+                        UOWFactory, 
+                        new AuthKeyService(smallKeyGenerator, messenger_sms),
+                        new AuthKeyService(smallKeyGenerator,messenger_email),
                         passHasher,
-                        new RegValidator(uow),
-                        new ClaimService(uow),
+                        regValidator,
+                        claimService,
                         bigKeyGenerator
                         );
                 }
             );
 
-            services.AddTransient<IProfileService, ProfileService>(
+            services.AddSingleton<IProfileService, ProfileService>(
                serviceProvider =>
                {
-                   var uow = new EFUOW();
-                   var regValidator = new RegValidator(uow);
                    IConfirmService emailCS = new ConfirmService(
-                       new ConfirmKeyService(uow, bigKeyGenerator, messenger_email),
-                       uow
+                       new ConfirmKeyService(bigKeyGenerator, messenger_email)
                        );
                    IConfirmService phoneCS = new ConfirmService(
-                       new ConfirmKeyService(uow, smallKeyGenerator, messenger_sms),
-                       uow
+                       new ConfirmKeyService(smallKeyGenerator, messenger_sms)
                        );
-                   IClaimService claimService = new ClaimService(uow);
                    return new ProfileService(
-                       uow,
+                       UOWFactory,
                        regValidator,
                        emailCS,
                        phoneCS,
@@ -90,13 +87,12 @@ namespace Education
                }
            );
 
-            services.AddTransient<IRestorePasswordService, RestorePasswordService>(
+            services.AddSingleton<IRestorePasswordService, RestorePasswordService>(
                serviceProvider =>
                {
-                   var uow = new EFUOW();
-                   var emaiCKS = new ConfirmKeyService(uow, bigKeyGenerator, messenger_email);
-                   var phoneCKS = new ConfirmKeyService(uow, smallKeyGenerator, messenger_sms);
-                   return new RestorePasswordService(uow, emaiCKS, phoneCKS, new RegValidator(uow), passHasher);
+                   var emaiCKS = new ConfirmKeyService(bigKeyGenerator, messenger_email);
+                   var phoneCKS = new ConfirmKeyService(smallKeyGenerator, messenger_sms);
+                   return new RestorePasswordService(UOWFactory, emaiCKS, phoneCKS, new RegValidator(), passHasher);
                }
             );
 

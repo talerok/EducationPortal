@@ -13,21 +13,23 @@ namespace Education.BLL.Services.UserServices.Auth
 {
     public class ClaimService : IClaimService
     {
-        private IUOW Data;
+        private IUOWFactory DataFactory;
 
-        public ClaimService(IUOW uow)
+        public ClaimService(IUOWFactory uowf)
         {
-            Data = uow;
+            DataFactory = uowf;
         }
 
-        private User GetUser(UserDTO userDTO)
+        public User GetUser(UserDTO userDTO, IUOW Data)
         {
-            var name = userDTO.Login.ToLower();
-            return Data.UserRepository.Get().FirstOrDefault(x => x.Login == name
+            var login = userDTO.Login.ToLower();
+            var email = userDTO.Email.ToLower();
+            var phone = userDTO.PhoneNumber.ToLower();
+            return Data.UserRepository.Get().FirstOrDefault(x => x.Login == login
             && x.Password == userDTO.Password);
         }
 
-        private User GetUser(LoginInfoDTO loginInfoDTO)
+        private User GetUser(LoginInfoDTO loginInfoDTO, IUOW Data)
         {
             var name = loginInfoDTO.Login.ToLower();
             return Data.UserRepository.Get().FirstOrDefault(x => x.Login == name
@@ -47,7 +49,7 @@ namespace Education.BLL.Services.UserServices.Auth
             return claim;
         }
 
-        private User Generate(IEnumerable<Claim> claims)
+        private User Generate(IEnumerable<Claim> claims, IUOW Data)
         {
             var a = claims.FirstOrDefault(x => x.Type == ClaimsIdentity.DefaultNameClaimType);
             if (a == null) return null;
@@ -56,7 +58,7 @@ namespace Education.BLL.Services.UserServices.Auth
             return claim.User;
         }
 
-        public void RemoveAllClaims(User user, params string[] without)
+        public void RemoveAllClaims(User user, IUOW Data, params string[] without)
         {
             if (user == null) return;
             var claims = Data.UserClaimRepository.Get().Where(x => x.User == user).ToList();
@@ -67,55 +69,68 @@ namespace Education.BLL.Services.UserServices.Auth
             }
 
             Data.UserClaimRepository.Delete(claims);
+            Data.SaveChanges();
+       
         }
 
         //---------------------------------------------------
         public UserDTO GetUser(IEnumerable<Claim> claims)
         {
-            var user = Generate(claims);
-            if (user == null) return null;
-            if (user.Ban != null && DateTime.Now < user.Ban.EndTime) return null;
-            var userDTO = new UserDTO
+            using (var Data = DataFactory.Get())
             {
-                Id = user.Id,
-                Login = user.Login,
-                Email = user.Email?.Value,
-                PhoneNumber = user.Phone?.Value,
-                FullName = user.Info?.FullName,
-                Password = user.Password
-            };
-            return userDTO;
+                var user = Generate(claims, Data);
+                if (user == null) return null;
+                if (user.Ban != null && DateTime.Now < user.Ban.EndTime) return null;
+                var userDTO = new UserDTO
+                {
+                    Id = user.Id,
+                    Login = user.Login,
+                    Email = user.Email?.Value,
+                    PhoneNumber = user.Phone?.Value,
+                    FullName = user.Info?.FullName,
+                    Password = user.Password
+                };
+                return userDTO;
+            }
         }
         //---------------------------------------------------
-        public ClaimsIdentity Generate(User user, LoginInfoDTO loginInfoDTO)
+        public ClaimsIdentity Generate(User user, IUOW Data, LoginInfoDTO loginInfoDTO)
         {
-            if (user == null || loginInfoDTO == null) return null;
+             if (user == null || loginInfoDTO == null) return null;
             var claim = GenerateClaim(user, loginInfoDTO);
             Data.UserClaimRepository.Add(claim);
+            Data.SaveChanges();
             var claims = new List<Claim>
             {
-                new Claim(ClaimsIdentity.DefaultNameClaimType, claim.Value),
+                    new Claim(ClaimsIdentity.DefaultNameClaimType, claim.Value),
             };
             return new ClaimsIdentity(claims, "ApplicationCookie");
+         
         }
 
         public void Logout(IEnumerable<Claim> claims)
         {
             if (claims == null) return;
-            var a = claims.FirstOrDefault(x => x.Type == ClaimsIdentity.DefaultNameClaimType);
-            var claim = Data.UserClaimRepository.Get().FirstOrDefault(x => x.Value == a.Value);
-            if (claim == null) return;
-            Data.UserClaimRepository.Delete(claim);
+            using (var Data = DataFactory.Get())
+            {
+                var a = claims.FirstOrDefault(x => x.Type == ClaimsIdentity.DefaultNameClaimType);
+                var claim = Data.UserClaimRepository.Get().FirstOrDefault(x => x.Value == a.Value);
+                if (claim == null) return;
+                Data.UserClaimRepository.Delete(claim);
+                Data.SaveChanges();
+            }
         }
 
-        public IEnumerable<ClaimInfoDTO> GetInfo(User user)
+        public IEnumerable<ClaimInfoDTO> GetInfo(User user, IUOW Data)
         {
             if (user == null) return null;
+
             var claims = Data.UserClaimRepository.Get().Where(x => x.User == user);
             var result = new List<ClaimInfoDTO>();
-            foreach(var claim in claims)
+            foreach (var claim in claims)
                 result.Add(new ClaimInfoDTO { Browser = claim.LoginBrowser, Ip = claim.LoginIp, LoginTime = claim.LoginTime });
             return result;
+    
         }
 
     }

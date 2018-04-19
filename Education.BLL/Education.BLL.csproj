@@ -14,9 +14,6 @@
 
   <ItemGroup>
     <Folder Include="Logic\Interfaces\" />
-    <Folder Include="Services\ForumService\Theme\" />
-    <Folder Include="Services\ForumService\Section\" />
-    <Folder Include="Services\ForumService\Group\" />
     <Folder Include="Services\AdminService\" />
   </ItemGroup>
 

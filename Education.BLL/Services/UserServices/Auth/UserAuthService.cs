@@ -11,9 +11,9 @@ using Education.BLL.Services.UserServices.Interfaces;
 
 namespace Education.BLL.Services.UserServices.Auth
 {
-    public class UserAuthService : Interfaces.IUserService
+    public class UserAuthService : IUserService
     {
-        private IUOW Data;
+        private IUOWFactory DataFactory;
         private IAuthKeyService EmailAuthService;
         private IAuthKeyService PhoneAuthService;
         private IPassHasher PassHasher;
@@ -21,7 +21,7 @@ namespace Education.BLL.Services.UserServices.Auth
         private IKeyGenerator KeyGenerator;
         public IClaimService ClaimService { get; private set; }
 
-        public UserAuthService(IUOW iuow, 
+        public UserAuthService(IUOWFactory iuowf, 
             IAuthKeyService phoneAuthService, 
             IAuthKeyService emailAuthService, 
             IPassHasher passHasher,
@@ -29,7 +29,7 @@ namespace Education.BLL.Services.UserServices.Auth
             IClaimService claimService,
             IKeyGenerator keyGenerator)
         {
-            Data = iuow;
+            DataFactory = iuowf;
             EmailAuthService = emailAuthService;
             PhoneAuthService = phoneAuthService;
             PassHasher = passHasher;
@@ -39,7 +39,7 @@ namespace Education.BLL.Services.UserServices.Auth
 
         }
       
-        private User GetUser(string login, string pass)
+        private User GetUser(string login, string pass, IUOW Data)
         {
             return Data.UserRepository.Get().FirstOrDefault(
                 x => 
@@ -52,7 +52,7 @@ namespace Education.BLL.Services.UserServices.Auth
                 x.Email != null && x.Email.Confirmed && x.Email.Value == login.ToLower());
         }
 
-        private User GetUser(UserDTO userDTO)
+        private User GetUser(UserDTO userDTO, IUOW Data)
         {
             return Data.UserRepository.Get().FirstOrDefault(
                 x =>
@@ -65,41 +65,49 @@ namespace Education.BLL.Services.UserServices.Auth
                 x.Email != null && x.Email.Confirmed && x.Email.Value == userDTO.Email.ToLower());
         }
 
-        private AuthResult KeyLogin(User user, LoginInfoDTO loginInfoDTO)
+        private AuthResult KeyLogin(User user, LoginInfoDTO loginInfoDTO, IUOW Data)
         {
             KeyStatus keyStatus;
-            if (user.authType == AuthType.Email) keyStatus = EmailAuthService.Check(user.Email, loginInfoDTO.Key);
-            else if (user.authType == AuthType.Phone) keyStatus = PhoneAuthService.Check(user.Phone, loginInfoDTO.Key);
+            if (user.authType == AuthType.Email) keyStatus = EmailAuthService.Check(user.Email, loginInfoDTO.Key, Data);
+            else if (user.authType == AuthType.Phone) keyStatus = PhoneAuthService.Check(user.Phone, loginInfoDTO.Key, Data);
             else throw new UserAuthException(AuthError.AuthTypeNotFound);
             if (keyStatus == KeyStatus.Success)
-                return new AuthResult { Status = AuthStatus.Succsess, Identity = ClaimService.Generate(user, loginInfoDTO) };
+                return new AuthResult { Status = AuthStatus.Succsess, Identity = ClaimService.Generate(user, Data, loginInfoDTO) };
             else if (keyStatus == KeyStatus.KeyTimeEnded) return new AuthResult { Status = AuthStatus.NeedNewKey };
             return new AuthResult { Status = AuthStatus.WrongKey };
 
         }
 
-        private AuthResult SendKey(User user)
+        private AuthResult SendKey(User user, IUOW Data)
         {
             DateTime keyTime;
-            if (user.authType == AuthType.Email) keyTime = EmailAuthService.Generate(user.Email);
-            else if (user.authType == AuthType.Phone) keyTime = PhoneAuthService.Generate(user.Phone);
+            if (user.authType == AuthType.Email) keyTime = EmailAuthService.Generate(user.Email, Data);
+            else if (user.authType == AuthType.Phone) keyTime = PhoneAuthService.Generate(user.Phone, Data);
             else throw new UserAuthException(AuthError.AuthTypeNotFound);
             return new AuthResult { Status = AuthStatus.KeySent, authType = user.authType, KeyTime = keyTime };
         }
 
+
         public AuthResult Login(LoginInfoDTO loginInfoDTO)
         {
-            User user = GetUser(loginInfoDTO.Login, loginInfoDTO.Password);
-            if (user == null) return new AuthResult { Status = AuthStatus.UserNotFound };
-            if (user.Ban != null)
+            using (var Data = DataFactory.Get())
             {
-                if (user.Ban.EndTime < DateTime.Now) return new AuthResult { Status = AuthStatus.UserBanned, KeyTime = user.Ban.EndTime, Comment = user.Ban.Reason };
-                else Data.BanRepository.Delete(user.Ban);
+                User user = GetUser(loginInfoDTO.Login, loginInfoDTO.Password, Data);
+                if (user == null) return new AuthResult { Status = AuthStatus.UserNotFound };
+                if (user.Ban != null)
+                {
+                    if (user.Ban.EndTime < DateTime.Now) return new AuthResult { Status = AuthStatus.UserBanned, KeyTime = user.Ban.EndTime, Comment = user.Ban.Reason };
+                    else
+                    {
+                        Data.BanRepository.Delete(user.Ban);
+                        Data.SaveChanges();
+                    }
+                }
+                if (user.authType == AuthType.Simple)
+                    return new AuthResult { Status = AuthStatus.Succsess, Identity = ClaimService.Generate(user, Data, loginInfoDTO) };
+                else if (!String.IsNullOrEmpty(loginInfoDTO.Key)) return KeyLogin(user, loginInfoDTO, Data);
+                else return SendKey(user, Data);
             }
-            if (user.authType == AuthType.Simple)
-                return new AuthResult { Status = AuthStatus.Succsess, Identity = ClaimService.Generate(user,loginInfoDTO) };
-            else if (!String.IsNullOrEmpty(loginInfoDTO.Key)) return KeyLogin(user, loginInfoDTO);
-            else return SendKey(user);
         }
 
         public void Logout(IEnumerable<Claim> claims)
@@ -108,38 +116,45 @@ namespace Education.BLL.Services.UserServices.Auth
         }
                      
         public RegisterResult Register(UserDTO userDTO)
-        {        
-            var info = new UserInfo { FullName = userDTO.FullName };
-            var check = RegValidator.Check(userDTO);
-            if (check != RegisterResult.Confirm) return check;
-            var newUser = new User
+        {
+            using (var Data = DataFactory.Get())
             {
-                Info = info,
-                Login = userDTO.Login.ToLower(),
-                Password = PassHasher.Get(userDTO.Password)
-            };
+                var info = new UserInfo { FullName = userDTO.FullName };
+                var check = RegValidator.Check(userDTO, Data);
+                if (check != RegisterResult.Confirm) return check;
+                var newUser = new User
+                {
+                    Info = info,
+                    Login = userDTO.Login.ToLower(),
+                    Password = PassHasher.Get(userDTO.Password)
+                };
 
-            Contact email = null;
-            Contact phone = null;
+                Contact email = null;
+                Contact phone = null;
 
-            if (!String.IsNullOrEmpty(userDTO.Email)) {
-                email = new Contact { Value = userDTO.Email.ToLower(), Confirmed = false };
+                if (!String.IsNullOrEmpty(userDTO.Email)) {
+                    email = new Contact { Value = userDTO.Email.ToLower(), Confirmed = false };
+                }
+                if (!String.IsNullOrEmpty(userDTO.PhoneNumber))
+                {
+                    phone = new Contact { Value = userDTO.PhoneNumber, Confirmed = false };
+                }
+
+                newUser.Phone = phone;
+                newUser.Email = email;
+                Data.UserRepository.Add(newUser);
+                Data.SaveChanges();
             }
-            if (!String.IsNullOrEmpty(userDTO.PhoneNumber))
-            {
-                phone = new Contact { Value = userDTO.PhoneNumber, Confirmed = false };
-            }
-
-            newUser.Phone = phone;
-            newUser.Email = email;
-            Data.UserRepository.Add(newUser);
             return RegisterResult.Confirm;
         }
 
         public void ResetClaims(UserDTO userDTO)
         {
-            var user = GetUser(userDTO);
-            ClaimService.RemoveAllClaims(user);
+            using (var Data = DataFactory.Get())
+            {
+                var user = GetUser(userDTO, Data);
+                ClaimService.RemoveAllClaims(user, Data);
+            }
         }
 
     }

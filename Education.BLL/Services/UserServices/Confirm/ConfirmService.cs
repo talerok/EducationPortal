@@ -13,59 +13,59 @@ namespace Education.BLL.Services.UserServices.Confirm
     public class ConfirmService : IConfirmService
     {
         protected IAuthKeyService KeyService;
-        protected IUOW Data;
 
-        public ConfirmService(IAuthKeyService keyService, IUOW data)
+        public ConfirmService(IAuthKeyService keyService)
         {
-            Data = data;
             KeyService = keyService;
         }
 
-        private void RemoveContact(Contact contact)
+        private void RemoveContact(Contact contact, IUOW Data)
         {
             Data.ContactRepository.Delete(contact);
+            Data.SaveChanges();
         }
 
-        private void ConfirmContact(Contact contact)
+        private void ConfirmContact(Contact contact, IUOW Data)
         {
             contact.Confirmed = true;
             Data.ContactRepository.Edited(contact);
+            Data.SaveChanges();
         }
 
-        public ConfirmResult DoIfSuccsess(Contact contact, Action<Contact> action = null, string key = null)
+        public ConfirmResult DoIfSuccsess(Contact contact, IUOW Data, Action<Contact, IUOW> action = null, string key = null)
         {
             if (contact == null) return new ConfirmResult { Status = ConfirmCode.ContactNotFound };
             if (String.IsNullOrEmpty(key))
             {
-                var keytime = KeyService.Generate(contact);
+                var keytime = KeyService.Generate(contact, Data);
                 return new ConfirmResult { Status = ConfirmCode.KeySend, KeyTime = keytime };
             }
-            var res = KeyService.Check(contact, key);
+            var res = KeyService.Check(contact, key, Data);
             if (res == KeyStatus.Success)
             {
-                action?.Invoke(contact);
+                action?.Invoke(contact, Data);
                 return new ConfirmResult { Status = ConfirmCode.Success };
             }
             else if (res == KeyStatus.KeyTimeEnded) return new ConfirmResult { Status = ConfirmCode.NeedNewKey };
             return new ConfirmResult { Status = ConfirmCode.Fail };
         }
 
-        public virtual ConfirmResult Confirm(Contact contact, string key = null)
+        public virtual ConfirmResult Confirm(Contact contact, IUOW Data, string key = null)
         {
             if (contact == null) return new ConfirmResult { Status = ConfirmCode.ContactNotFound };
             if (contact.Confirmed) return new ConfirmResult { Status = ConfirmCode.AlreadyConfimed };
-            return DoIfSuccsess(contact, ConfirmContact, key);
+            return DoIfSuccsess(contact, Data, ConfirmContact, key);
         }
 
-        public virtual ConfirmResult Remove(Contact contact, string key = null)
+        public virtual ConfirmResult Remove(Contact contact, IUOW Data, string key = null)
         {
             if (contact == null) return new ConfirmResult { Status = ConfirmCode.ContactNotFound };
             if (!contact.Confirmed)
             {
-                RemoveContact(contact);
+                RemoveContact(contact, Data);
                 return new ConfirmResult { Status = ConfirmCode.Success };
             }
-            return DoIfSuccsess(contact, RemoveContact, key);
+            return DoIfSuccsess(contact, Data, RemoveContact, key);
         }
     }
 }

@@ -5,7 +5,7 @@ using Education.DAL.Entities;
 
 namespace Education.DAL.Interfaces
 {
-    public interface IUOW
+    public interface IUOW : IDisposable
     {
         IRepos<User> UserRepository { get; }
         IRepos<UserInfo> UserInfoRepository { get; }
@@ -19,5 +19,7 @@ namespace Education.DAL.Interfaces
         IRepos<Section> SectionRepository { get; }
         IRepos<Group> GroupRepository { get; }
         IRepos<UserGroup> UserGroupRepository { get; }
+
+        void SaveChanges();
     }
 }

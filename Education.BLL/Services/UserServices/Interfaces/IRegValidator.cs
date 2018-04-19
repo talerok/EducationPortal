@@ -1,4 +1,5 @@
 ﻿using Education.BLL.DTO.User;
+using Education.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -30,11 +31,11 @@ namespace Education.BLL.Services.UserServices.Interfaces
 
     public interface IRegValidator
     {
-        CheckResult checkEmail(string email);
-        CheckResult checkPhone(string phone);
-        CheckResult checkLogin(string login);
+        CheckResult checkEmail(string email, IUOW Data);
+        CheckResult checkPhone(string phone, IUOW Data);
+        CheckResult checkLogin(string login, IUOW Data);
         CheckResult checkPassword(string password);
         CheckResult checkFullName(string fullname);
-        RegisterResult Check(UserDTO userDTO);
+        RegisterResult Check(UserDTO userDTO, IUOW Data);
     }
 }
