@@ -15,6 +15,11 @@ using Education.BLL.Services.UserServices.Confirm;
 using Education.BLL.Services.UserServices.Profile;
 using Education.BLL.Services.UserServices.Restore;
 using System.Threading.Tasks;
+using Education.BLL.Logic.Interfaces;
+using Education.BLL.Logic.Rules;
+using Education.BLL.Logic;
+using Education.BLL.Services.ForumServices.Interfaces;
+using Education.BLL.Services.ForumServices;
 
 namespace Education
 {
@@ -95,7 +100,43 @@ namespace Education
                    return new RestorePasswordService(UOWFactory, emaiCKS, phoneCKS, new RegValidator(), passHasher);
                }
             );
+            //---------Forum Services--------------------------------
+            IGroupRules groupRules = new GroupRules();
+            ISectionRules sectionRules = new SectionRules(groupRules);
+            IThemeRules themeRules = new ThemeRules(sectionRules);
+            IMessageRules messageRules = new MessageRules(themeRules, sectionRules);
+            IForumDTOHelper forumDTOHelper = new ForumDTOHelper(messageRules, themeRules, sectionRules, groupRules);
+            IGetUserDTO getUserDTO = new GetUserDTO();
 
+            services.AddSingleton<IGroupService,GroupService>(
+              serviceProvider =>
+              {
+                  return new GroupService(groupRules, getUserDTO, UOWFactory, forumDTOHelper);
+              }
+            );
+
+            services.AddSingleton<ISectionService, SectionService>(
+              serviceProvider =>
+              {
+                  return new SectionService(sectionRules, getUserDTO, UOWFactory, forumDTOHelper);
+              }
+            );
+
+            services.AddSingleton<IThemeService, ThemeService>(
+              serviceProvider =>
+              {
+                  return new ThemeService(themeRules, getUserDTO, UOWFactory, forumDTOHelper);
+              }
+            );
+
+            services.AddSingleton<IMessageService, MessageService>(
+              serviceProvider =>
+              {
+                  return new MessageService(messageRules, getUserDTO, UOWFactory, forumDTOHelper);
+              }
+            );
+
+            //-------------------------------------------------------
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                  .AddCookie(options =>
                  {

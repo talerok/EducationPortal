@@ -1,143 +1,112 @@
 ﻿using Education.BLL.DTO.Forum;
 using Education.BLL.DTO.User;
+using Education.BLL.Logic.Interfaces;
 using Education.BLL.Services.ForumServices.Interfaces;
-using Education.BLL.Services.UserServices.Interfaces;
 using Education.DAL.Entities;
 using Education.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Education.BLL.Services.ForumServices
 {
-    class MessageService : IControlService<MessageDTO>
+    public class MessageService : IMessageService
     {
-        private IGetUserService getUserService;
+
+        private IMessageRules MessageRules;
+        private IGetUserDTO GetUserService;
         private IUOWFactory DataFactory;
+        private IForumDTOHelper forumDTOHelper;
 
-        
-
-        private (ControlResult Code, Theme Theme) GetPremision(User user, int themeId,  IUOW Data)
+        public MessageService(IMessageRules rules, IGetUserDTO getUserDTO, IUOWFactory dataFactory, IForumDTOHelper forumHelper)
         {
-            var theme = Data.ThemeRepository.Get().FirstOrDefault(x => x.Id == themeId);
-            
-            if (theme?.Section?.Group == null) return (ControlResult.notFound, null);
-            if (user == null) return (ControlResult.noPremission, theme);
-
-            var userStatus = theme.Section.Group.Users.FirstOrDefault(x => x.User == user);
-            if (userStatus == null || userStatus.Status == UserGroupStatus.request)
-                return (ControlResult.noPremission, theme);
-            if (!theme.Open && user.Level < 1 && userStatus.Status != UserGroupStatus.owner)
-                return (ControlResult.noPremission, theme);
-
-            return (ControlResult.succsess, theme);
+            GetUserService = getUserDTO;
+            DataFactory = dataFactory;
+            forumDTOHelper = forumHelper;
+            MessageRules = rules;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ParrentId">Theme Id</param>
-        /// <param name="Value">Message</param>
-        /// <param name="userDTO">User who sent it</param>
-        /// <returns>Result and id of message</returns>
-        public (ControlResult Code, int Id) Create(int ParrentId, MessageDTO Value, UserDTO userDTO)
+        private void EditMessage(Message message, MessageDTO messageDTO, User user, bool edit = true)
+        {
+            message.Text = messageDTO.Text;
+            if (edit)
+            {
+                message.LastEditor = user;
+                message.LastEditTime = DateTime.Now;
+            }
+            else
+            {
+                message.Owner = user;
+                message.Time = DateTime.Now;
+            }
+        }
+
+        private (AccessCode Code, Message Message, User User) CheckMessage(UserDTO userDTO, int MessageId, Func<User, Message, bool> checkFunc, IUOW Data)
+        {
+            var user = GetUserService.Get(userDTO, Data);
+            var message = Data.MessageRepository.Get().FirstOrDefault(x => x.Id == MessageId);
+            if (message == null) return (AccessCode.NotFound, null, user);
+            if (checkFunc(user, message)) return (AccessCode.Succsess, message, user);
+            else return (AccessCode.NoPremision, null, user);
+        }
+
+        public CreateResultDTO Create(MessageDTO DTO, UserDTO userDTO)
         {
             using(var Data = DataFactory.Get())
             {
-                var user = getUserService.Get(userDTO, Data);
-
-                var res = GetPremision(user, ParrentId, Data);
-                if (res.Code != ControlResult.succsess) return (res.Code, 0);
-
-                res.Theme.Messages.Add(
-                    new Message
-                    {
-                        Owner = user,
-                        Text = Value.Text,
-                        Time = DateTime.Now,
-                        Theme = res.Theme
-                    }
-                );
-                Data.ThemeRepository.Edited(res.Theme);
-                Data.SaveChanges();
-                return (res.Code, res.Theme.Messages.Count - 1);
+                var user = GetUserService.Get(userDTO, Data);
+                var theme = Data.ThemeRepository.Get().FirstOrDefault(x => x.Id == DTO.ThemeId);
+                if (theme == null) return CreateResultDTO.NotFound;
+                if (MessageRules.CanCreate(user, theme))
+                {
+                    var message = new Message();
+                    EditMessage(message, DTO, user, false);
+                    Data.MessageRepository.Add(message);
+                    Data.SaveChanges();
+                    return new CreateResultDTO(message.Id, AccessCode.Succsess);
+                }
+                else return CreateResultDTO.NoPremision;
             }
-            
         }
 
-        public ControlResult Delete(int Id, UserDTO userDTO)
+        public AccessCode Delete(int id, UserDTO userDTO)
         {
             using (var Data = DataFactory.Get())
             {
-                var user = getUserService.Get(userDTO, Data);
-                var message = Data.MessageRepository.Get().FirstOrDefault(x => x.Id == Id);
-                if (message == null || message.Theme == null) return ControlResult.notFound;
-                var res = GetPremision(user, message.Theme.Id, Data);
-                if (res.Code == ControlResult.succsess)
+                var check = CheckMessage(userDTO, id, MessageRules.CanDelete, Data);
+                if (check.Code == AccessCode.Succsess)
                 {
-                    Data.MessageRepository.Delete(message);
+                    Data.MessageRepository.Delete(check.Message);
                     Data.SaveChanges();
                 }
-                return res.Code;
-            }
-         }
-
-        private UserPublicInfoDTO GetPubliUserInfo(User user)
-        {
-            if (user == null) return null;
-            return new UserPublicInfoDTO
-            {
-                AvatarPath = user.Info.Avatar,
-                Name = user.Info.FullName
-            };
-        }
-
-        private MessageDTO GetMessageDTO(Message message)
-        {
-            return new MessageDTO
-            {
-                Owner = GetPubliUserInfo(message.Owner),
-                LastEditor = GetPubliUserInfo(message.LastEditor),
-                Time = message.Time,
-                LastEditTime = message.LastEditTime,
-                Text = message.Text
-            };
-        }
-
-        public (ControlResult Code, MessageDTO Value) Get(int Id, UserDTO userDTO)
-        {
-            using (var Data = DataFactory.Get())
-            {
-                var user = getUserService.Get(userDTO, Data);
-                var message = Data.MessageRepository.Get().FirstOrDefault(x => x.Id == Id);
-                if (message == null) return (ControlResult.notFound, null);
-                var res = GetPremision(user, Id, Data);
-                MessageDTO messageDTO = null;
-                if (res.Code == ControlResult.succsess)  messageDTO = GetMessageDTO(message);
-                return (res.Code, messageDTO);
+                return check.Code;
             }
         }
 
-        public ControlResult Update(int Id, MessageDTO Value, UserDTO userDTO)
+        public (AccessCode, MessageDTO) Read(int id, UserDTO userDTO)
         {
             using (var Data = DataFactory.Get())
             {
-                var user = getUserService.Get(userDTO, Data);
-                var message = Data.MessageRepository.Get().FirstOrDefault(x => x.Id == Id);
-                if (message == null || message.Theme == null) return ControlResult.notFound;
+                var check = CheckMessage(userDTO, id, MessageRules.CanRead, Data);
+                if (check.Code == AccessCode.Succsess)
+                    return (check.Code, forumDTOHelper.GetDTO(check.Message, check.User));
+                else return (check.Code, null);
+            }
+        }
 
-                var res = GetPremision(user, message.Theme.Id, Data);
-                if (res.Code == ControlResult.succsess)
+        public AccessCode Update(MessageDTO DTO, UserDTO userDTO)
+        {
+            using (var Data = DataFactory.Get())
+            {
+                var check = CheckMessage(userDTO, DTO.Id, MessageRules.CanRead, Data);
+                if (check.Code == AccessCode.Succsess)
                 {
-                    message.LastEditor = user;
-                    message.LastEditTime = DateTime.Now;
-                    message.Text = Value.Text;
-                    Data.MessageRepository.Edited(message);
+                    EditMessage(check.Message, DTO, check.User);
+                    Data.MessageRepository.Edited(check.Message);
                     Data.SaveChanges();
                 }
-
-
-                return res.Code;
+                return check.Code;
             }
         }
     }

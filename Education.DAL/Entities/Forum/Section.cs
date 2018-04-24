@@ -9,6 +9,7 @@ namespace Education.DAL.Entities
         public string Name { get; set; }
         public virtual ICollection<Theme> Themes { get; set; }
         public virtual Group Group { get; set; }
+        public bool Open { get; set; }
         public Section()
         {
             Themes = new List<Theme>();

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Education.BLL.Services.ForumServices.Interfaces
 {
-    interface ISectionService : IControlService<SectionDTO>
+    public interface ISectionService : IControlService<SectionDTO>
     {
     }
 }

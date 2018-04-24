@@ -8,6 +8,7 @@ namespace Education.DAL.Entities
     {
         public string Name { get; set; }
         public string Logo { get; set; }
+        public bool Open { get; set; }
         public virtual ICollection<UserGroup> Users { get; set; }
         public virtual ICollection<Section> Sections { get; set; }
         public Group()

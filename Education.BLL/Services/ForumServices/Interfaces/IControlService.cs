@@ -1,26 +1,21 @@
-﻿using Education.BLL.DTO.User;
+﻿using Education.BLL.DTO.Forum;
+using Education.BLL.DTO.User;
+using Education.DAL.Entities;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace Education.BLL.Services.ForumServices.Interfaces
 {
-    public enum ControlResult
+    public interface IControlService<T> 
     {
-        succsess,
-        notFound,
-        noPremission,
-        error
-    }
+        CreateResultDTO Create(T DTO, UserDTO userDTO);
 
+        AccessCode Update(T DTO, UserDTO userDTO);
 
-    interface IControlService<T>
-    {
-        (ControlResult Code, T Value) Get(int Id, UserDTO userDTO);
-        ControlResult Delete(int Id, UserDTO userDTO);
-        ControlResult Update(int Id, T Value, UserDTO userDTO);
-        (ControlResult Code, int Id) Create(int ParrentId, T Value, UserDTO userDTO);
+        AccessCode Delete(int id, UserDTO userDTO);
+
+        (AccessCode, T) Read(int id, UserDTO userDTO);
+        
     }
 }

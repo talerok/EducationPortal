@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Education.BLL.DTO.Forum
 {
-    class ThemePreviewDTO
+    public class ThemePreviewDTO
     {
         public int Id { get; set; }
         public string Name { get; set; }

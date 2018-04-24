@@ -4,13 +4,10 @@ using System.Text;
 
 namespace Education.BLL.DTO.Forum
 {
-    public class ThemeDTO
+    public class GroupPreviewDTO
     {
-        public int Id { get; set; }
-        public bool Open { get; set; }
-        public int SectionId { get; set; }
         public string Name { get; set; }
+        public string Logo { get; set; }
         public AccessDTO Access { get; set; }
-        public IEnumerable<MessageDTO> Messages { get; set; }
     }
 }
