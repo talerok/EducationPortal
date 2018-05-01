@@ -1,0 +1,67 @@
+﻿@model UsersOfGroup
+
+<!DOCTYPE html>
+
+@{ 
+    @using Education.DAL.Entities
+
+    string GetOption(UserGroupStatus id, int vid, string name, UserGroupStatus sel)
+    {
+        var res = "<option value=\"" + vid + "\"";
+        if (id != sel) return res + ">" + name + "</option>";
+        else return res + " selected>" + name + "</option>";
+    }
+}
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Users</title>
+</head>
+<body>
+<div class="UserList">
+    <h1>Запросы:</h1>
+    @foreach(var user in Model.Data.Where(x => x.Status == Education.DAL.Entities.UserGroupStatus.request))
+    {
+        <div class="User">
+            <div class="Info">
+                <div class="UserName">@user.UserInfo.Name</div>
+                <img class="Avatar" src="@user.UserInfo.AvatarPath" />
+            </div>
+            <div class="Edit">
+                <form method="post" action="/Group/ControlUser">
+                    <input type="hidden" name="GroupId" value="@Model.GroupId" />
+                    <input type="hidden" name="UserID" value="@user.UserInfo.Id" />
+                    <input type="hidden" name="Status" value="1" />
+                    <input type="submit" value="Добавить" />
+                </form>
+            </div>
+        </div>
+    }
+    <h1>Участники:</h1>
+    @foreach(var user in Model.Data.Where(x => x.Status != Education.DAL.Entities.UserGroupStatus.request))
+    {
+        <div class="User">
+            <div class="Info">
+                <div class="UserName">@user.UserInfo.Name</div>
+                <img class="Avatar" src="@user.UserInfo.AvatarPath" />
+            </div>
+            <div class="Edit">
+                <form method="post" action="/Group/ControlUser">
+                    <input type="hidden" name="GroupId" value="@Model.GroupId" />
+                    <input type="hidden" name="UserID" value="@user.UserInfo.Id" />
+                    <select name="Status">
+
+                        @Html.Raw(GetOption(UserGroupStatus.request, 0, "Запрос", user.Status))
+                        @Html.Raw(@GetOption(UserGroupStatus.member, 1, "Участник", user.Status))
+                        @Html.Raw(@GetOption(UserGroupStatus.owner, 2, "Модератор", user.Status))
+                        <option value="4">Удалить</option>
+                    </select>
+                    <input type="submit" value="Обновить данные" />
+                </form>
+            </div>
+        </div>
+    }
+</div>
+</body>
+</html>

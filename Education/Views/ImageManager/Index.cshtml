@@ -1,0 +1,181 @@
+﻿
+@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+<script>
+    var load = false;
+
+    function StartLoad() {
+        load = true;
+        $("#ImageManager").hide();
+        $("#LoadCounter").show();
+    }
+
+    function EndLoad() {
+        load = false;
+        $("#ImageManager").show();
+        $("#LoadCounter").hide();
+    }
+
+    function IsLoad() {
+        return load;
+    }
+
+    function LoadFiles(files) {
+        if (IsLoad()) return;
+        StartLoad();
+        $.ajax({
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                // прогресс загрузки на сервер
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = evt.loaded / evt.total * 100;
+                        var percent = percentComplete.toFixed(0) + "%";
+                        $("#LoadCounter").css("width", percent);
+                        $("#LoadCounter").text(percent);
+                        console.log(percentComplete);
+                    }
+                }, false);
+                return xhr;
+            },
+            url: '/ImageManager/Load',
+            method: 'POST',
+            data: files,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                LoadImages();
+                EndLoad();
+            },
+            error: function (jqxhr, status, errorMsg) {
+                Message("Ошибка загрузки");
+                EndLoad();
+            }
+
+        });
+    }
+
+    function Message(text) {
+        $("#Message").text(text);
+
+    }
+
+    function LoadImages() {
+        $.ajax({
+            url: '/ImageManager/Images',
+            method: 'Get',
+            success: function (data) {
+                $("#Images").html(data);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        ImageManager.ondragover = function () {
+            ImageManager.style.backgroundcolor = "aliceblue";
+            return false;
+        };
+
+        ImageManager.ondragleave = function () {
+            ImageManager.style.backgroundcolor = "";
+            return false;
+        };
+
+        ImageManager.ondrop = function (event) {
+            event.preventDefault();
+            var formData = new FormData();
+            var files_list = event.dataTransfer.files;
+            for (var i = 0; i < files_list.length; i++) {
+                formData.append('file', files_list[i]);
+            }
+            LoadFiles(formData);
+        };
+
+        SelectFile.onchange = function () {
+            var files_list = SelectFile.files;
+            var formData = new FormData();
+            for (var i = 0; i < files_list.length; i++) {
+                formData.append('file', files_list[i]);
+            }
+            LoadFiles(formData);
+        };
+
+        LoadImages();
+
+    });
+
+    var Selected = "";
+    var LastSelect = null;
+    function Select(id) {
+        if (LastSelect != null) {
+            LastSelect.removeClass("SelectedImage");
+        }
+        LastSelect = $("#" + id);
+        LastSelect.addClass("SelectedImage");
+    }
+
+    function DeleteImage() {
+        if (LastSelect == null) return;
+        $.ajax({
+            url: '/ImageManager/Delete',
+            method: 'POST',
+            data: { path: LastSelect.attr('src') },
+            success: function (data) {
+                LoadImages();
+            },
+            error: function (jqxhr, status, errorMsg) {
+                Message("Ошибка удаления");
+            }
+        });
+    }
+
+    function ShowArea() {
+        $("#Area").show();
+
+    }
+
+    function HideArea() {
+        $("#Area").hide();
+
+    }
+
+    function Cls() {
+        HideArea();
+    }
+
+    function Del() {
+        DeleteImage();
+    }
+
+    function Sel() {
+        if (OnSelect == null) return;
+        if (LastSelect == null) return;
+        OnSelect(LastSelect.attr('src'));
+    }
+
+</script>
+<div class="DarkSpace" id="Area" hidden>
+    <div class="SelectImage">
+        <div class="LoadCounter" id="LoadCounter" hidden></div>
+
+        <div class="ImageManager" id="ImageManager">
+            <div class="Label">Перетащите файлы сюда</div>
+            <label class="SelectButton">
+                <input type="file" id="SelectFile" name="Select" multiple="multiple" />
+                Выбрать файлы
+            </label>
+        </div>
+        <div class="ErrorMessage" id="Message"></div>
+        <hr />
+        <div id="Images">
+
+        </div>
+        <div class="ImagesControl">
+            <input type="button" onclick="Cls()" value="Отмена" />
+            <input type="button" onclick="Del()" value="Удалить" />
+            <input type="button" onclick="Sel()" value="Выбрать" />
+        </div>
+    </div>
+</div>

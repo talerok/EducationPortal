@@ -1,0 +1,9 @@
+﻿@model Education.BLL.DTO.Forum.SectionDTO
+
+<div class="Navigation">
+    <a href="/">Главная страница</a> >>
+    <a href="/Group/Index/@Model.Route.GroupId">Группа @Model.Route.GroupName</a> >>
+    <a href="/Section/Index/@Model.Id">Секция @Model.Name</a>
+</div>
+
+@Html.Partial("View", Model);

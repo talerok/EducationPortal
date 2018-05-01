@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Education.BLL.Services.ImageManager.Interfaces;
 
 namespace Education.BLL.Services.UserServices.Profile
 {
@@ -169,11 +170,13 @@ namespace Education.BLL.Services.UserServices.Profile
                 if (user == null) return null;
                 return new UserProfileDTO
                 {
+                    Avatar = user?.Info?.Avatar,
                     authType = user.authType,
                     email = user.Email?.Value,
                     emailConfirm = user.Email?.Confirmed,
                     phone = user.Phone?.Value,
                     phoneConfirm = user.Phone?.Confirmed,
+                    name = user.Info?.FullName,
                     Claims = ClaimService.GetInfo(user, Data)
                 };
             }
@@ -229,6 +232,20 @@ namespace Education.BLL.Services.UserServices.Profile
                     Data.SaveChanges();
                 }
                 return res;
+            }
+        }
+
+        public ConfirmCode SetAvatar(UserDTO userDTO, string path)
+        {
+            using (var Data = DataFactory.Get())
+            {
+                var user = GetUser(userDTO, Data);
+                if (user == null) return ConfirmCode.UserNotFound;
+                if (user.Info == null) return ConfirmCode.Fail;
+                user.Info.Avatar = path;
+                Data.UserInfoRepository.Edited(user.Info);
+                Data.SaveChanges();
+                return ConfirmCode.Success;
             }
         }
 

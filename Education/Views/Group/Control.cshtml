@@ -1,0 +1,67 @@
+﻿@model Education.BLL.DTO.Forum.GroupDTO
+
+@{
+    string Desctiprion, Action, ButtonText;
+
+    if(Model == null)
+    {
+        Desctiprion = "Создать группу";
+        Action = "/Group/Create";
+        ButtonText = "Создать";
+    }
+    else
+    {
+        Desctiprion = "Редактировать группу " + Model.Name;
+        Action = "/Group/Update";
+        ButtonText = "Сохранить";
+
+    }
+    string Logo = Model != null ? Model.Logo : "";
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <script src="/lib/jquery/dist/jquery.js"></script>
+    <title>View</title>
+</head>
+<body>
+    <h4>@Desctiprion</h4>
+
+    <img class="GroupLogo" id="Logo" src="@Logo" />
+    <input type="button" onclick="ShowArea()" value="Сменить логотип" />
+
+    <form action="@Action" method="post">
+        <input type="hidden" name="Id" value="@(Model != null ? Model.Id : -1)" />
+        <input type="hidden" name="Logo" id="SendLogo" value="@Logo" />
+        <input type="text" name="Name" placeholder="Имя группы" value="@(Model != null ? Model.Name : "")" />
+        <label><input type="checkbox" name="Open" @(Model != null && Model.Open ? "checked" : "") value="true" /> Открытая группа</label>
+        <input type="submit" value="@ButtonText" />
+    </form>
+
+    @if (Model != null && Model.Access.CanDelete)
+    {
+        <form action="/Group/Delete" method="post">
+            <input type="hidden" name="Id" value="@(Model != null ? Model.Id : -1)" />
+            <input type="submit" value="Удалить" />
+        </form>
+    }
+
+    @Html.Partial("~/Views/ImageManager/Index.cshtml");
+
+    <script>
+        var OnSelect = function (url) {
+            $("#Logo").attr("src", url);
+            $("#SendLogo").attr("value", url);
+            HideArea();
+        }
+    </script>
+
+</body>
+
+
+
+</html>
+

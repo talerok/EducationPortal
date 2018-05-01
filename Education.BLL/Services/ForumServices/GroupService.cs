@@ -1,4 +1,5 @@
 ﻿using Education.BLL.DTO.Forum;
+using Education.BLL.DTO.Forum.Edit;
 using Education.BLL.DTO.User;
 using Education.BLL.Logic.Interfaces;
 using Education.BLL.Services.ForumServices.Interfaces;
@@ -18,7 +19,7 @@ namespace Education.BLL.Services.ForumServices
         private IForumDTOHelper ForumDTOHelper;
         private IGroupRules GroupRule;
 
-        private (AccessCode Code, Group Group, User User) CheckSection(UserDTO userDTO, int GroupId, Func<User, Group, bool> checkFunc, IUOW Data)
+        private (AccessCode Code, Group Group, User User) CheckRule(UserDTO userDTO, int GroupId, Func<User, Group, bool> checkFunc, IUOW Data)
         {
             var user = getUserService.Get(userDTO, Data);
             var group = Data.GroupRepository.Get().FirstOrDefault(x => x.Id == GroupId);
@@ -27,7 +28,7 @@ namespace Education.BLL.Services.ForumServices
             else return (AccessCode.NoPremision, null, user);
         }
 
-        private void EditGroup(GroupDTO groupDTO, Group group)
+        private void EditGroup(GroupEditDTO groupDTO, Group group)
         {
             group.Logo = groupDTO.Logo;
             group.Name = groupDTO.Name;
@@ -42,7 +43,7 @@ namespace Education.BLL.Services.ForumServices
             GroupRule = rules;
         }
         
-        public CreateResultDTO Create(GroupDTO groupDTO, UserDTO userDTO)
+        public CreateResultDTO Create(GroupEditDTO groupDTO, UserDTO userDTO)
         {
             using (var Data = DataFactory.Get())
             {
@@ -59,11 +60,11 @@ namespace Education.BLL.Services.ForumServices
             return CreateResultDTO.NoPremision;
         }
 
-        public AccessCode Update(GroupDTO groupDTO, UserDTO userDTO)
+        public AccessCode Update(GroupEditDTO groupDTO, UserDTO userDTO)
         {
             using (var Data = DataFactory.Get())
             {
-                var check = CheckSection(userDTO, groupDTO.Id, GroupRule.CanEdit, Data);
+                var check = CheckRule(userDTO, groupDTO.Id, GroupRule.CanEdit, Data);
                 if (check.Code == AccessCode.Succsess)
                 {
                     EditGroup(groupDTO, check.Group);
@@ -78,7 +79,7 @@ namespace Education.BLL.Services.ForumServices
         {
             using (var Data = DataFactory.Get())
             {
-                var check = CheckSection(userDTO, id, GroupRule.CanDelete, Data);
+                var check = CheckRule(userDTO, id, GroupRule.CanDelete, Data);
                 if (check.Code == AccessCode.Succsess)
                 {
                     Data.GroupRepository.Delete(check.Group);
@@ -92,10 +93,68 @@ namespace Education.BLL.Services.ForumServices
         {
             using (var Data = DataFactory.Get())
             {
-                var check = CheckSection(userDTO, id, GroupRule.CanRead, Data);
+                var check = CheckRule(userDTO, id, GroupRule.CanRead, Data);
                 if (check.Code == AccessCode.Succsess)
                     return (check.Code, ForumDTOHelper.GetDTO(check.Group, check.User));
                 else return (check.Code, null);
+            }
+        }
+
+        public AccessCode Request(UserDTO userDTO, int GroupId)
+        {
+            using(var Data = DataFactory.Get())
+            {
+                var user = getUserService.Get(userDTO, Data);
+                if (user == null) return AccessCode.NoPremision;
+                var group = Data.GroupRepository.Get().FirstOrDefault(x => x.Id == GroupId);
+                if (group == null) return AccessCode.NotFound;
+                if (group.Open) return AccessCode.NoPremision;
+                var usergroup = group.Users.FirstOrDefault(x => x.UserId == user.Id);
+                if (usergroup != null) return AccessCode.Error;
+                Data.UserGroupRepository.Add(new UserGroup
+                {
+                    Group = group,
+                    User = user,
+                    Status = UserGroupStatus.request
+                });
+                Data.SaveChanges();
+                return AccessCode.Succsess;
+            }
+        }
+
+        public AccessCode Leave(UserDTO userDTO, int GroupId)
+        {
+            using (var Data = DataFactory.Get())
+            {
+                var user = getUserService.Get(userDTO, Data);
+                if (user == null) return AccessCode.NoPremision;
+                var group = Data.GroupRepository.Get().FirstOrDefault(x => x.Id == GroupId);
+                if (group == null) return AccessCode.NotFound;
+                if (group.Open) return AccessCode.NoPremision;
+                var usergroup = group.Users.FirstOrDefault(x => x.UserId == user.Id);
+                if (usergroup == null) return AccessCode.Error;
+                Data.UserGroupRepository.Delete(usergroup);
+                Data.SaveChanges();
+                return AccessCode.Succsess;
+            }
+        }
+
+        public UserGroupInfoDTO GetUsers(int groupId, UserDTO userDTO)
+        {
+            using (var Data = DataFactory.Get())
+            {
+                var check = CheckRule(userDTO, groupId, GroupRule.CanControlUsers, Data);
+                if (check.Code == AccessCode.Succsess)
+                {
+                    return new UserGroupInfoDTO
+                    {
+                        Code = AccessCode.Succsess,
+                        Data = check.Group.Users.Select(x => ForumDTOHelper.GetDTO(x)).ToList()
+                    };
+                }
+                else if (check.Code == AccessCode.NoPremision) return UserGroupInfoDTO.NoPremision;
+                else if (check.Code == AccessCode.NotFound) return UserGroupInfoDTO.NotFound;
+                else return UserGroupInfoDTO.Error;
             }
         }
 
@@ -103,18 +162,13 @@ namespace Education.BLL.Services.ForumServices
         {
             using (var Data = DataFactory.Get())
             {
-                var check = CheckSection(userDTO, groupId, GroupRule.CanControlUsers, Data);
+                var check = CheckRule(userDTO, groupId, GroupRule.CanControlUsers, Data);
                 if (check.Code == AccessCode.Succsess)
                 {
                     var userGroup = check.Group.Users.FirstOrDefault(x => x.UserId == userId);
-                    if (userGroup == null)
-                    {
-                        var user = Data.UserRepository.Get().FirstOrDefault(x => x.Id == userId);
-                        if (user == null) return AccessCode.NotFound;
-                        userGroup = new UserGroup { Group = check.Group, User = user, Status = status };
-                        Data.UserGroupRepository.Add(userGroup);
-                    }
+                    if (userGroup == null) return AccessCode.NotFound;
                     else userGroup.Status = status;
+                    Data.UserGroupRepository.Edited(userGroup);
                     Data.SaveChanges();
                 }
                 return check.Code;
@@ -125,7 +179,7 @@ namespace Education.BLL.Services.ForumServices
         {
             using (var Data = DataFactory.Get())
             {
-                var check = CheckSection(userDTO, groupId, GroupRule.CanControlUsers, Data);
+                var check = CheckRule(userDTO, groupId, GroupRule.CanControlUsers, Data);
                 if (check.Code == AccessCode.Succsess)
                 {
                     var userGroup = check.Group.Users.FirstOrDefault(x => x.UserId == userId);
@@ -134,6 +188,15 @@ namespace Education.BLL.Services.ForumServices
                     Data.SaveChanges();
                 }
                 return check.Code;
+            }
+        }
+
+        public bool CanCreate(UserDTO userDTO)
+        {
+            using(var Data = DataFactory.Get())
+            {
+                var user = getUserService.Get(userDTO,Data);
+                return GroupRule.CanCreate(user);
             }
         }
     }

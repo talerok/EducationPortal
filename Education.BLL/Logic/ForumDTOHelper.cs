@@ -13,6 +13,38 @@ namespace Education.BLL.Logic
         private IThemeRules ThemeRules;
         private ISectionRules SectionRules;
         private IGroupRules GroupRules;
+        private static int MessagesPerPage = 10;
+        private SectionRoute GetRoute(Section section)
+        {
+            if (section.Group == null) return null;
+            return new SectionRoute
+            {
+                GroupId = section.Group.Id,
+                GroupName = section.Group.Name
+            };
+        }
+
+        private ThemeRoute GetRoute(Theme theme)
+        {
+            if (theme.Section == null) return null;
+            return new ThemeRoute
+            {
+                SectionRoute = GetRoute(theme.Section),
+                SectionId = theme.Section.Id,
+                SectionName = theme.Section.Name
+            };
+        }
+
+        private MessageRoute GetRoute(Message message)
+        {
+            if (message.Theme == null) return null;
+            return new MessageRoute
+            {
+                ThemeRoute = GetRoute(message.Theme),
+                ThemeId = message.Theme.Id,
+                ThemeName = message.Theme.Name
+            };
+        }
 
         public ForumDTOHelper(IMessageRules messageRules, IThemeRules themeRules, ISectionRules sectionRules, IGroupRules groupRules)
         {
@@ -24,6 +56,7 @@ namespace Education.BLL.Logic
 
         private UserPublicInfoDTO GetUser(User user)
         {
+            if (user == null) return null;
             return new UserPublicInfoDTO
             {
                 AvatarPath = user.Info.Avatar,
@@ -44,12 +77,13 @@ namespace Education.BLL.Logic
                 Name = group.Name,
                 Open = group.Open,
                 Id = group.Id,
-                Access = new AccessDTO
+                Access = new GroupAccessDTO
                 {
                     CanCreateElements = SectionRules.CanCreate(user, group),
                     CanDelete = GroupRules.CanDelete(user, group),
                     CanRead = GroupRules.CanRead(user, group),
-                    CanUpdate = GroupRules.CanEdit(user, group)
+                    CanUpdate = GroupRules.CanEdit(user, group),
+                    CanControlUsers = GroupRules.CanControlUsers(user, group)
                 },
                 Sections = sections
             };
@@ -63,17 +97,18 @@ namespace Education.BLL.Logic
                 themes.Add(new ThemePreviewDTO
                 {
                     Id = theme.Id,
+                    Pages = GetThemePages(theme),
                     Name = theme.Name,
                     Owner = GetUser(theme?.Messages?.FirstOrDefault()?.Owner),
                     LastMessages = GetDTO(theme?.Messages?.LastOrDefault(), user)
                 });
             return new SectionDTO
             {
-                GroupId = section.Group.Id,
                 Id = section.Id,
                 Name = section.Name,
                 Open = section.Open,
                 Themes = themes,
+                Route = GetRoute(section),
                 Access = new AccessDTO
                 {
                     CanCreateElements = ThemeRules.CanCreate(user, section),
@@ -84,18 +119,17 @@ namespace Education.BLL.Logic
             };
         }
         
-        public ThemeDTO GetDTO(Theme theme, User user)
+        private ThemeDTO CreateThemeDTO(Theme theme, User user, IEnumerable<Message> messages)
         {
-            if (theme == null) return null;
-            var messages = new List<MessageDTO>();
-            foreach (var message in theme.Messages) messages.Add(GetDTO(message, user));
+            var mres = new List<MessageDTO>();
+            foreach (var message in messages) mres.Add(GetDTO(message, user));
             return new ThemeDTO
             {
                 Name = theme.Name,
                 Open = theme.Open,
-                SectionId = theme.Section.Id,
-                Messages = messages,
+                Messages = mres,
                 Id = theme.Id,
+                Route = GetRoute(theme),
                 Access = new AccessDTO
                 {
                     CanCreateElements = MessageRules.CanCreate(user, theme),
@@ -104,6 +138,40 @@ namespace Education.BLL.Logic
                     CanUpdate = ThemeRules.CanEdit(user, theme)
                 }
             };
+        }
+
+        private int GetThemePages(Theme theme)
+        {
+            int res = theme.Messages.Count / MessagesPerPage;
+            if (theme.Messages.Count % MessagesPerPage != 0) res++;
+            return res;
+        }
+
+        public ThemeDTO GetDTO(Theme theme, User user, int page)
+        {
+            if (theme == null) return null;
+
+            if (page < 1) page = 1;
+
+            var messages = theme.Messages.OrderBy(x => x.Time)
+                .Skip((page - 1) * MessagesPerPage)
+                .Take(MessagesPerPage);
+
+            var res = CreateThemeDTO(theme, user, messages);
+
+            res.Pages = GetThemePages(theme);
+
+            res.CurPage = page;
+            return res;
+        }
+
+        public ThemeDTO GetDTO(Theme theme, User user)
+        {
+            if (theme == null) return null;
+            var res = CreateThemeDTO(theme, user, theme.Messages);
+            res.Pages = 1;
+            res.CurPage = 1;
+            return res;
         }
 
         public MessageDTO GetDTO(Message message, User user)
@@ -115,9 +183,9 @@ namespace Education.BLL.Logic
                 LastEditTime = message.LastEditTime,
                 Owner = GetUser(message.Owner),
                 Time = message.Time,
-                ThemeId = message.Theme.Id,
                 Text = message.Text,
                 Id = message.Id,
+                Route = GetRoute(message),
                 Access = new AccessDTO
                 {
                     CanCreateElements = false,
@@ -126,6 +194,48 @@ namespace Education.BLL.Logic
                     CanUpdate = MessageRules.CanEdit(user, message)
                 }
 
+            };
+        }
+
+        public UserGroupDTO GetDTO(UserGroup userGroup)
+        {
+            return new UserGroupDTO
+            {
+                UserInfo = GetUser(userGroup.User),
+                Status = userGroup.Status
+            };
+        }
+
+        public GroupPreviewDTO GetDTO(User user, Group group)
+        {
+            UserGroupInfo info = null;
+            
+            if(user != null)
+            {
+                info = new UserGroupInfo();
+                var usergroup = group.Users.FirstOrDefault(x => x.UserId == user.Id);
+                if (usergroup != null)
+                {
+                    info.Member = true;
+                    info.Status = usergroup.Status;
+                }
+                else info.Member = false;
+            }
+            return new GroupPreviewDTO
+            {
+                Id = group.Id,
+                Logo = group.Logo,
+                Name = group.Name,
+                Open = group.Open,
+                Status = info,
+                Access = new GroupAccessDTO
+                {
+                    CanCreateElements = SectionRules.CanCreate(user, group),
+                    CanDelete = GroupRules.CanDelete(user, group),
+                    CanRead = GroupRules.CanRead(user, group),
+                    CanUpdate = GroupRules.CanEdit(user, group),
+                    CanControlUsers = GroupRules.CanControlUsers(user,group)
+                }
             };
         }
     }

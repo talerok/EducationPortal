@@ -20,6 +20,9 @@ using Education.BLL.Logic.Rules;
 using Education.BLL.Logic;
 using Education.BLL.Services.ForumServices.Interfaces;
 using Education.BLL.Services.ForumServices;
+using Education.BLL.Services.ImageManager;
+using Education.BLL.Services.ImageManager.Interfaces;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace Education
 {
@@ -136,7 +139,30 @@ namespace Education
               }
             );
 
+            services.AddSingleton<IForumService, ForumService>(
+              serviceProvider =>
+              {
+                 return new ForumService(getUserDTO, UOWFactory, forumDTOHelper, groupRules);
+              }
+            );
+
             //-------------------------------------------------------
+            services.AddSingleton<IImageService, ImageService>(
+                serviceProvider =>
+                {
+                    return new ImageService(UOWFactory, getUserDTO);
+                }
+            );
+
+            services.Configure<FormOptions>(x =>
+            {
+                x.ValueCountLimit = 10;
+                x.MemoryBufferThreshold = int.MaxValue;
+                x.ValueLengthLimit = int.MaxValue;
+                x.MultipartBodyLengthLimit = int.MaxValue; // In case of multipart
+            });
+
+            //------------------------------------------------------
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                  .AddCookie(options =>
                  {
@@ -167,7 +193,7 @@ namespace Education
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    template: "{controller=Home}/{action=Index}/{id?}/{page?}");
             });
         }
     }

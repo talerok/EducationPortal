@@ -1,0 +1,65 @@
+﻿@model Education.BLL.DTO.Forum.ThemeDTO
+
+@{
+    var paging = await Component.InvokeAsync("Paging", new { url = "/Theme/Index/" + Model.Id + "/", page = Model.CurPage, pages = Model.Pages });
+}
+
+<div class="Navigation">
+    <a href="/">Главная страница</a> >>
+    <a href="/Group/Index/@Model.Route.SectionRoute.GroupId">Группа @Model.Route.SectionRoute.GroupName</a> >>
+    <a href="/Section/Index/@Model.Route.SectionId">Секция @Model.Route.SectionName</a> >>
+    <a href="/Theme/Index/@Model.Id">Тема @Model.Name</a>
+</div>
+<div class="Theme">
+    @foreach (var message in Model.Messages)
+    {
+        <div class="Message">
+            <div class="Info">
+                <div class="Name">@message.Owner.Name</div>
+                <img class="Avatar" src="@message.Owner.AvatarPath" />
+            </div>
+            <div class="Body">
+                <div class="Panel">
+                    @message.Time
+                </div>
+                @if (message == Model.Messages.First())
+                {
+                    <div class="Text">@Html.Raw(message.Text)</div>
+                    @if (Model.Access.CanUpdate)
+                    {
+                        <div class="Edit">
+                            <a href="/Theme/Control/@Model.Id">Редактировать</a>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="Text">@message.Text</div>
+                    @if (message.LastEditor != null)
+                    {
+                        <div class="Edited">Изменено: @message.LastEditor.Name, @message.LastEditTime</div>
+                    }
+                    @if (message.Access.CanUpdate)
+                    {
+                        <div class="Edit">
+                            <a href="/Message/Control/@message.Id">Редактировать</a>
+                        </div>
+                    }
+
+                }
+            </div>
+        </div>
+    }
+
+    @paging
+    @if (Model.Access.CanCreateElements)
+    {
+        <div class="AddMessage">
+            <form method="post" action="/Message/Create/">
+                <input type="hidden" name="themeId" value="@Model.Id" />
+                <textarea class="Text" name="Text"></textarea>
+                <input type="submit" value="Отправить Сообщение" />
+            </form>
+        </div>
+    }
+</div>

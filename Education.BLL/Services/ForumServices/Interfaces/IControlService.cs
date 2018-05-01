@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Education.BLL.Services.ForumServices.Interfaces
 {
-    public interface IControlService<T> 
+    public interface IControlService<D,T> 
     {
         CreateResultDTO Create(T DTO, UserDTO userDTO);
 
@@ -15,7 +15,7 @@ namespace Education.BLL.Services.ForumServices.Interfaces
 
         AccessCode Delete(int id, UserDTO userDTO);
 
-        (AccessCode, T) Read(int id, UserDTO userDTO);
+        (AccessCode, D) Read(int id, UserDTO userDTO);
         
     }
 }

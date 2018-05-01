@@ -1,0 +1,51 @@
+﻿@model Education.Models.SectionControl
+
+@{
+    string Desctiprion, Action, ButtonText;
+
+    if (Model.SectionDTO == null)
+    {
+        Desctiprion = "Создать секцию";
+        Action = "/Section/Create";
+        ButtonText = "Создать";
+    }
+    else
+    {
+        Desctiprion = "Редактировать секцию " + Model.SectionDTO.Name;
+        Action = "/Section/Update";
+        ButtonText = "Сохранить";
+
+    }
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>View</title>
+</head>
+<body>
+    <h4>@Desctiprion</h4>
+
+    <form action="@Action" method="post">
+
+        <input type="hidden" name="Id" value="@(Model.SectionDTO != null ? Model.SectionDTO.Id : -1)" />
+        <input type="hidden" name="GroupId" value="@(Model.SectionDTO != null ? Model.SectionDTO.Route.GroupId : Model.GroupId)" />
+        <input type="text" name="Name" placeholder="Название секции" value="@(Model.SectionDTO != null ? Model.SectionDTO.Name : "")" />
+        <label><input type="checkbox" name="Open" @(Model.SectionDTO != null && Model.SectionDTO.Open ? "checked" : "") value="true"/> 
+            Открытая секция
+        </label>
+        <input type="submit" value="@ButtonText" />
+    </form>
+
+    @if (Model.SectionDTO != null && Model.SectionDTO.Access.CanDelete)
+    {
+        <form action="/Section/Delete" method="post">
+            <input type="hidden" name="Id" value="@(Model != null ? Model.SectionDTO.Id : -1)" />
+            <input type="submit" value="Удалить" />
+        </form>
+    }
+
+</body>
+</html>

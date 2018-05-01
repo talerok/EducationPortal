@@ -29,5 +29,6 @@ namespace Education.BLL.Services.UserServices.Interfaces
         ConfirmResult RemovePhone(UserDTO userDTO, string key = null);
         SetContactCode SetEmail(UserDTO userDTO, string email);
         SetContactCode SetPhone(UserDTO userDTO, string phone);
+        ConfirmCode SetAvatar(UserDTO userDTO, string path);
     }
 }

@@ -36,12 +36,10 @@ namespace Education.BLL.Logic.Rules
         public bool CanRead(User user, Group group)
         {
             if (group == null) throw new ArgumentNullException("group");
-            if (user == null)
-            {
-                if (group.Open) return true;
-            }
+            if (group.Open) return true;
             else
             {
+                if (user == null) return false;
                 if (user.Level > 0) return true;
                 var usergroup = group.Users.FirstOrDefault(x => x.User == user);
                 if (usergroup == null || usergroup.Status == UserGroupStatus.request)

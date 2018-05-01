@@ -7,9 +7,11 @@ namespace Education.BLL.DTO.User
 {
     public class UserProfileDTO
     {
+        public string Avatar { get; set; }
         public string email { get; set; }
         public bool? emailConfirm { get; set; }
         public string phone { get; set; }
+        public string name { get; set; }
         public bool? phoneConfirm { get; set; }
         public AuthType authType { get; set; }
         public IEnumerable<ClaimInfoDTO> Claims { get; set; }

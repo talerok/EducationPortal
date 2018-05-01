@@ -17,4 +17,8 @@
     <ProjectReference Include="..\Education.BLL\Education.BLL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\Новая папка\" />
+  </ItemGroup>
+
 </Project>

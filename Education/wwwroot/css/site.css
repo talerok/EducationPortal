@@ -1,18 +1,324 @@
-﻿body {
-    padding-top: 50px;
-    padding-bottom: 20px;
+﻿body{
+    background-image: url("/background.png");
+}
+
+a, a:hover {
+    color: #333;
+    text-decoration: none;
+}
+
+.CreateGroup {
+    font-weight: 600;
+}
+
+.Paging {
+    margin: 10px;
+    text-align: right;
+}
+
+.Paging a{
+    font-weight: 600;
+    margin: 2px;
+}
+
+.Paging .Selected{
+    color: blue;
+}
+
+.Header {
+    padding-left: 10%;
+    display: table;
+    width: 100%;
+    background-color: white;
+}
+
+.Header .Login{
+    display: table-cell;
+    text-align: right;
+    padding-right: 30px;
+}
+
+.Header .Login text{
+    padding-right: 10px;
+    font-weight: 600;
+}
+
+.Header .Login a{
+    padding-right: 10px;
+}
+
+.Header .Name{
+    display: table-cell;
+    font-size: 22px;
+    margin-left: 10%;
+    padding: 5px;
+}
+
+.ThemeInfo .Name{
+    font-weight: 600;
+}
+
+.ThemePreview:hover {
+    background-color: #f0f6fb;
+}
+
+.Navigation {
+    font-weight: 600;
+}
+
+.Header, .Description, .ThemePreview, .Navigation, .Message, .Message .Body .Panel {
+    border-style: solid;
+    border-width: 0px;
+    border-bottom-width: 1px;
+    border-color: lightgray;
+}
+
+.Message .Body .Panel{
+    width: 100%;
+    text-align: right;
 }
 
 /* Wrapping element */
 /* Set some basic padding to keep content from hitting the edges */
-.body-content {
-    padding-left: 15px;
-    padding-right: 15px;
+.Content {
+    margin: 0 auto;
+    width: 80%;
+    margin-top: 20px;
+}
+
+.GroupLogo {
+    width: 150px;
+}
+
+.DarkSpace .SelectImage {
+    width: 90%;
+    margin: 0 auto;
+    background-color: white;
+    padding: 10px;
+    border-style: groove;
+    margin-top: 100px;
+}
+
+.Message .Info{
+    font-weight: 600;
+}
+
+.MessageEdit textarea{
+    width: 100%;
+    height: 150px;
+    resize: none;
+}
+
+.Body .ThemePreview {
+    margin-left: 25px;
+    display: table;
+    width: calc(100% - 25px);
+}
+
+.ImageManager {
+    height: 150px;
+    margin: 0 auto;
+    border-style: dashed;
+    text-align: center;
+    border-color: gray;
+}
+
+.ImageManager .Label{
+    margin-top: 50px;
+    font-size: 20px;
+}
+
+.ImageManager input[type="file"], .SelectFile input[type="file"] {
+    display: none;
+}
+
+.ImageManager .SelectButton{
+     border: 1px solid #ccc;
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.Images img{
+    width: 150px;
+    cursor: pointer;
+}
+
+.Message {
+    display: table;
+    width: 100%;
+}
+
+.Message .Body{
+    display: table-cell;
+}
+
+.Message .Info {
+    width: 155px;
+    text-align: center;
+    display: table-cell;
+    border-width: 0;
+    border-right: 1px;
+    border-color: lightgray;
+    padding-right: 5px;
+    border-style: solid;
+}
+
+.User{
+    margin: 10px;
+    text-align: center;
+    width: 150px;
+    display: inline-block;
+}
+
+.User .Info{
+    font-weight: 600;
+}
+
+.User .Edit{
+    margin-top: 3px;
+}
+
+.User input, .User select{
+    width: 100%;
 }
 
 
+
+.SelectedImage {
+    border-style: inset;
+    border-width: 3px;
+}
+
+.ImagesControl {
+    text-align: right;
+    padding-top: 5px;
+}
+
+.ImagesControl input{
+    background-color: white;
+    border-style: solid;
+}
+
+.ImagesControl input :hover {
+    background-color: gray;
+    color: white;
+
+}
+
+.LoadCounter {
+    text-align: center;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(to left, #36ce5e, rgba(96, 243, 36, 0.47));
+}
+
+.Message .Info .Name{
+   font-weight: 600;
+}
+
+.AddMessage .Text {
+    width: 100%;
+    height: 100px;
+    resize: none; 
+}
+
+.Message .Text {
+    min-height: 160px;
+    padding: 5px;
+    vertical-align: middle;
+}
+
+.ThemePreview .ThemeInfo {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.ThemePreview .LastMessage {
+    text-align: right;
+    margin-right: 10px;
+}
+
+.Description{
+    display: table;
+    width: 100%;
+}
+
+.Description .Name {
+    font-size: 20px;
+    display: table-cell;
+}
+
+.Description .Edit a:not(:last-child){
+    border-style: solid;
+    border-width: 0px;
+    border-color: lightgray;
+    border-right-width: 1px;
+    padding-right: 3px;
+}
+
+
+
+.Description .Edit {
+    display: table-cell;
+    text-align: right;
+    font-weight: 600;
+
+}
+
+.Sections{
+    padding-left: 25px;
+}
+
+.AddMessage {
+    margin-top: 20px;
+}
+
+.Message .Body .Edit {
+    float: right;
+    font-weight: 600;
+}
+
+.Edited {
+    display: inline-block;
+}
+
+.Avatar {
+    width: 150px;
+    max-width: 150px;
+    margin: 5px;
+}
+
+.Groups{
+    margin-top: 30px;
+}
+
+.Group{
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.Group img {
+    height: 50px;
+    position: absolute;
+}
+
+.Group .Info {
+    display: inline-block;
+    margin-left: 60px;
+}
+
+.Group .Info .Name {
+    font-size: 26px;
+}
+
 .Panel .error{
     color: red;
+}
+
+.ErrorMessage{
+    color: red;
+    text-align: center;
 }
 
 .DataTable{
@@ -29,7 +335,7 @@
 }
 
 .DataFields input[type="password"], .DataFields input[type="text"], .DataFields input[type="email"], .DataFields select {
-    background-color: white;
+    background-color: #ffffff00;
     border-left: 0px;
     border-right: 0px;
     border-top: 0px;
@@ -40,7 +346,12 @@
     width: 100%;
 }
 
-.Button, .DataFields input[type="button"] {
+.SelectFile{
+    text-align: center;
+    cursor: pointer;
+}
+
+.SelectFile, .Button, .DataFields input[type="button"], .DataFields input[type="submit"], .DataFields input[type="file"] {
     width: 100%;
     font-size: 13px;
     padding: 6px 0 4px 10px;

@@ -595,6 +595,17 @@
 </script>
 
 <div class="Panel">
+    <h3>Аватар:</h3>
+    <img class="Avatar" src="@Model.Avatar" />
+    <form method="post" action="/Profile/SetAvatar" enctype="multipart/form-data">
+        <label class="SelectFile">
+            <input type="file" name="file"/>
+            Выбрать файл
+        </label>
+        <div class="DataFields">
+            <input type="submit" value="Изменить аватар" />
+        </div>
+    </form>
     <div id="Message"></div>
     <h3>Email:</h3>
     <div class="DataFields" id="EmailPanel">
@@ -619,36 +630,36 @@
 
     </div>
 </div>
-<hr />
-<h3>Активные сессии:</h3>
-<div class="DataTable" id='ClaimsPanel'>
-    <table>
-        <tr><td>IP адрес</td><td>Время авторизации</td><td>Браузер</td></tr>
-        @foreach(var a in Model.Claims)
-        {
-            <tr><td>@a.Ip</td><td>@a.LoginTime</td><td>@a.Browser</td></tr>
+    <hr />
+    <h3>Активные сессии:</h3>
+    <div class="DataTable" id='ClaimsPanel'>
+        <table>
+            <tr><td>IP адрес</td><td>Время авторизации</td><td>Браузер</td></tr>
+            @foreach (var a in Model.Claims)
+            {
+                <tr><td>@a.Ip</td><td>@a.LoginTime</td><td>@a.Browser</td></tr>
 
-        }
-    </table>
-</div>
-<br/>
-<div class="DataFields">
-    <div class="Panel">
-        <input type="Button" value="Сбросить все сессии" onclick="window.location='/api/ResetClaims';" />
+            }
+        </table>
     </div>
-</div>
-<div class="DarkSpace" id="DarkSpace" style="display: none">
-    <div class="SecretKeyPanel">
-        <div class="PanelLabel">
-            <text>Подтверждение</text>
+    <br />
+    <div class="DataFields">
+        <div class="Panel">
+            <input type="Button" value="Сбросить все сессии" onclick="window.location='/api/ResetClaims';" />
         </div>
-        <div class="PanelBody">
-            <text id="keyInfo"></text><br />
-            <input id="key" type="text" />
-            <div class="Buttons">
-                <input type="button" onclick="KeyClick()" value="Потвердить" />
-                <input type="button" onclick="HideDarkSpace()" value="Отмена" />
+    </div>
+    <div class="DarkSpace" id="DarkSpace" style="display: none">
+        <div class="SecretKeyPanel">
+            <div class="PanelLabel">
+                <text>Подтверждение</text>
+            </div>
+            <div class="PanelBody">
+                <text id="keyInfo"></text><br />
+                <input id="key" type="text" />
+                <div class="Buttons">
+                    <input type="button" onclick="KeyClick()" value="Потвердить" />
+                    <input type="button" onclick="HideDarkSpace()" value="Отмена" />
+                </div>
             </div>
         </div>
     </div>
-</div>

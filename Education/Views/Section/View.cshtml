@@ -1,0 +1,40 @@
+﻿@model Education.BLL.DTO.Forum.SectionDTO
+@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+<div class="Section">
+    <div class="Description">
+        <div class="Name"><a href="/Section/Index/@Model.Id"> @Model.Name</a></div>
+        <div class="Edit">
+            <strong>
+                @if (Model.Access.CanUpdate)
+                {
+                    <a href="/Section/Control/@Model.Id">Редактировать</a>
+                }
+                @if (Model.Access.CanCreateElements)
+                {
+                    <a href="/Theme/Add/@Model.Id">Создать тему</a>
+                }
+            </strong>
+        </div>
+    </div>
+    <div class="Body">  
+            @foreach (var theme in Model.Themes)
+            {
+                <div class="ThemePreview">
+                    <a href="/Theme/Index/@theme.Id" class="ThemeInfo">
+                        <div class="Name">@theme.Name</div>
+                        <div class="Owner">Создал: @theme.Owner.Name</div>
+                        <div class="Pages">Страниц: @theme.Pages</div>
+                    </a>
+
+                    <div class="LastMessage">
+                        <strong><a href="/Theme/Index/@theme.Id/@theme.Pages">Последнее сообщение:</a></strong>
+                        <div class="Owner">@theme.LastMessages.Owner.Name</div>
+                        <div class="Time"> @theme.LastMessages.Time</div>
+                    </div>
+                </div>
+            }
+    </div>
+</div>

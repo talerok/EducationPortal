@@ -30,13 +30,13 @@ namespace Education.DAL.Repositories
             //-------------------------------------------------
             modelBuilder.Entity<UserGroup>().HasKey(x => new { x.UserId, x.GroupId });
             modelBuilder.Entity<UserGroup>()
-                .HasOne(x => x.Group).WithMany(x => x.Users).HasForeignKey(x => x.GroupId);
+                .HasOne(x => x.Group).WithMany(x => x.Users).HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<UserGroup>()
-                .HasOne(x => x.User).WithMany(x => x.Groups).HasForeignKey(x => x.UserId);
+                .HasOne(x => x.User).WithMany(x => x.Groups).HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             //--------------------------------------------------
-            modelBuilder.Entity<Group>().HasMany(x => x.Sections).WithOne(x => x.Group);
-            modelBuilder.Entity<Section>().HasMany(x => x.Themes).WithOne(x => x.Section);
-            modelBuilder.Entity<Theme>().HasMany(x => x.Messages).WithOne(x => x.Theme);
+            modelBuilder.Entity<Message>().HasOne(x => x.Theme).WithMany(x => x.Messages).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Theme>().HasOne(x => x.Section).WithMany(x => x.Themes).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Section>().HasOne(x => x.Group).WithMany(x => x.Sections).OnDelete(DeleteBehavior.Cascade);
         }
 
 

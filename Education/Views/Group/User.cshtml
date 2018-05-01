@@ -1,0 +1,15 @@
+﻿@model (int GroupId, Education.BLL.DTO.Forum.UserGroupDTO User)
+
+<div class="User">
+    <form method="post" action="/Group/ControlUser">
+        <input type="hidden" name="GroupId" value="@Model.GroupId" />
+        <input type="hidden" name="UserID" value="@Model.User.UserInfo.Id" />
+        <select name="Status">
+            <option value="0">Запрос</option>
+            <option value="1">Участник</option>
+            <option value="2">Модератор</option>
+            <option value="3">Удалить</option>
+        </select>
+        <input type="submit" value="Обновить данные" />
+    </form>
+</div>

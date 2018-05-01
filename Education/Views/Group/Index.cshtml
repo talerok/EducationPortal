@@ -1,0 +1,35 @@
+﻿@model Education.BLL.DTO.Forum.GroupDTO
+
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Группа @Model.Name</title>
+</head>
+
+<div class="Navigation">
+    <a href="/">Главная страница</a> >> <a href="/Group/Index/@Model.Id">Группа @Model.Name</a>
+</div>
+<div class="Description">
+    <div class="Name">
+        <a href="/Group/Index/@Model.Id">Группа @Model.Name</a>
+    </div>
+    <div class="Edit">
+        @if (Model.Access.CanUpdate)
+        {
+            <a href="/Group/Control/@Model.Id">Редактировать</a>
+        }
+        @if (Model.Access.CanControlUsers)
+        {
+            <a href="/Group/Users/@Model.Id">Пользователи</a>
+        }
+        @if (Model.Access.CanCreateElements)
+        {
+            <a href="/Section/Add/@Model.Id">Добавить секцию</a>
+        }
+    </div>
+</div>
+<div class="Sections">
+    @foreach (var section in Model.Sections)
+    {
+        @Html.Partial("~/Views/Section/View.cshtml", section);
+    }
+</div>

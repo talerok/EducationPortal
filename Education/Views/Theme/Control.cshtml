@@ -1,0 +1,66 @@
+﻿@model Education.Models.ThemeControl
+
+@{
+    string Desctiprion, Action, ButtonText;
+    string text = "";
+
+    if (Model.ThemeDTO == null)
+    {
+        Desctiprion = "Создать тему";
+        Action = "/Theme/Create";
+        ButtonText = "Создать";
+    }
+    else
+    {
+        Desctiprion = "Редактировать тему " + Model.ThemeDTO.Name;
+        Action = "/Theme/Update";
+        ButtonText = "Сохранить";
+        var fs = Model.ThemeDTO?.Messages?.FirstOrDefault();
+        if (fs != null)
+        {
+            text = fs.Text;
+        }
+    }
+
+
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>View</title>
+    <script type="text/javascript" src="~/editor/nicEdit.js"></script>
+    <script type="text/javascript">
+        bkLib.onDomLoaded(function () {
+            new nicEditor({ iconsPath: '/nicEditorIcons.gif', fullPanel: true }).panelInstance('Area');
+        });
+    </script>
+</head>
+<body>
+    <h4>@Desctiprion</h4>
+    <div>
+        <form action="@Action" method="post">
+
+            <input type="hidden" name="Id" value="@(Model.ThemeDTO != null ? Model.ThemeDTO.Id : -1)" />
+            <input type="hidden" name="SectionId" value="@(Model.ThemeDTO != null ? Model.ThemeDTO.Route.SectionId : Model.SectionId)" />
+            <input type="text" name="Name" placeholder="Название темы" value="@(Model.ThemeDTO != null ? Model.ThemeDTO.Name : "")" />
+            <label>
+                <input type="checkbox" name="Open" @(Model.ThemeDTO != null && Model.ThemeDTO.Open ? "checked" : "") value="true" />
+                Открытая группа
+            </label>
+            <textarea cols="50" id="Area" name="Text" style="width:100%; height:300px">@text</textarea>
+            <input type="submit" value="@ButtonText" />
+        </form>
+    </div>
+    @if (Model.ThemeDTO != null && Model.ThemeDTO.Access.CanDelete)
+    {
+        <form action="/Theme/Remove" method="post">
+            <input type="hidden" name="Id" value="@(Model != null ? Model.ThemeDTO.Id : -1)" />
+            <input type="submit" value="Удалить" />
+        </form>
+    }
+
+</body>
+</html>

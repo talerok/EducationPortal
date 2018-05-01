@@ -1,4 +1,5 @@
 ﻿using Education.BLL.DTO.Forum;
+using Education.BLL.DTO.Forum.Edit;
 using Education.BLL.DTO.User;
 using Education.BLL.Logic.Interfaces;
 using Education.BLL.Services.ForumServices.Interfaces;
@@ -35,13 +36,13 @@ namespace Education.BLL.Services.ForumServices
             else return (AccessCode.NoPremision, null, user);
         }
 
-        private void EditSection(SectionDTO sectionDTO, Section section)
+        private void EditSection(SectionEditDTO sectionDTO, Section section)
         {
             section.Name = sectionDTO.Name;
             section.Open = sectionDTO.Open;
         }
 
-        public CreateResultDTO Create(SectionDTO DTO, UserDTO userDTO)
+        public CreateResultDTO Create(SectionEditDTO DTO, UserDTO userDTO)
         {
             using(var Data = DataFactory.Get())
             {
@@ -86,7 +87,7 @@ namespace Education.BLL.Services.ForumServices
             }
         }
 
-        public AccessCode Update(SectionDTO DTO, UserDTO userDTO)
+        public AccessCode Update(SectionEditDTO DTO, UserDTO userDTO)
         {
             using (var Data = DataFactory.Get())
             {
@@ -98,6 +99,17 @@ namespace Education.BLL.Services.ForumServices
                     Data.SaveChanges();
                 }
                 return check.Code;
+            }
+        }
+
+        public bool CanCreate(int GroupId, UserDTO userDTO)
+        {
+            using (var Data = DataFactory.Get())
+            {
+                var user = GetUserService.Get(userDTO, Data);
+                var group = Data.GroupRepository.Get().FirstOrDefault(x => x.Id == GroupId);
+                if (group == null) return false;
+                return SectionRules.CanCreate(user, group);
             }
         }
     }

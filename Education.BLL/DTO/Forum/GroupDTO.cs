@@ -10,7 +10,7 @@ namespace Education.BLL.DTO.Forum
         public string Name { get; set; }
         public string Logo { get; set; }
         public bool Open { get; set; }
-        public AccessDTO Access { get; set; }
+        public GroupAccessDTO Access { get; set; }
         public IEnumerable<SectionDTO> Sections { get; set; }
     }
 }

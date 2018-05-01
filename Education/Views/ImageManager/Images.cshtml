@@ -1,0 +1,13 @@
+﻿@model IEnumerable<Education.BLL.DTO.ImageInfoDTO>
+
+
+<div class="Images">
+    @{
+        int i = 0;
+        @foreach (var image in Model)
+        {
+            <img id="@i" src="@image.Path" onclick='Select(@i);'/>
+            i++;
+        }
+    }
+</div>
