@@ -1,35 +1,39 @@
 ﻿@model Education.BLL.DTO.Forum.GroupDTO
 
+@{ 
+    var id = new { id = Model.Id };
+}
+
 <head>
     <meta name="viewport" content="width=device-width" />
     <title>Группа @Model.Name</title>
 </head>
 
 <div class="Navigation">
-    <a href="/">Главная страница</a> >> <a href="/Group/Index/@Model.Id">Группа @Model.Name</a>
+    @await Component.InvokeAsync("Navigation", Model)
 </div>
 <div class="Description">
     <div class="Name">
-        <a href="/Group/Index/@Model.Id">Группа @Model.Name</a>
+        @Html.ActionLink("Группа " + Model.Name, "Index", "Group", id)
     </div>
     <div class="Edit">
         @if (Model.Access.CanUpdate)
         {
-            <a href="/Group/Control/@Model.Id">Редактировать</a>
+            @Html.ActionLink("Редактировать", "Control", "Group", id)
         }
         @if (Model.Access.CanControlUsers)
         {
-            <a href="/Group/Users/@Model.Id">Пользователи</a>
+            @Html.ActionLink("Пользователи", "Users", "Group", id)
         }
         @if (Model.Access.CanCreateElements)
         {
-            <a href="/Section/Add/@Model.Id">Добавить секцию</a>
+            @Html.ActionLink("Добавить секцию", "Add", "Section", id)
         }
     </div>
 </div>
 <div class="Sections">
     @foreach (var section in Model.Sections)
     {
-        @Html.Partial("~/Views/Section/View.cshtml", section);
+        @Html.Partial("~/Views/Section/View.cshtml", section)
     }
 </div>

@@ -40,7 +40,7 @@ namespace Education.Components
             }
 
             if (page != pages)
-                res.Append(GetRef(url, "Последняя>>"));
+                res.Append(GetRef(url + pages, "Последняя>>"));
 
             return new HtmlString(res.ToString());
         }

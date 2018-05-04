@@ -2,17 +2,21 @@
 
 @{
         ViewData["Title"] = "Education Portal";
-    }
+}
 
 <div class="Groups">
     @foreach (var group in Model.Groups)
     {
+        var id = new { id = group.Id };
+
         <div class="Group">
             <img class="Logo" src="@group.Logo" />
             <div class="Info">
                 @if (group.Access.CanRead)
                 {
-                    <div class="Name"><a href="Group/Index/@group.Id">Группа @group.Name</a></div>
+                    <div class="Name">
+                        @Html.ActionLink("Группа " + group.Name, "Index", "Group", id)
+                    </div>
                 }
                 else
                 {
@@ -23,7 +27,9 @@
 
                     @if (group.Access.CanUpdate)
                     {
-                        <strong><a href="/Group/Control/@group.Id">Редактировать</a></strong>
+                        <strong>
+                            @Html.ActionLink("Редактировать", "Control", "Group", id)
+                        </strong>
                     }
                 </div>
                 <div>
@@ -33,7 +39,7 @@
                         {
                             if (!group.Access.CanRead)
                             {
-                                <a href="/Group/Enter/@group.Id"> Подать заявку</a>
+                                @Html.ActionLink("Подать заявку", "Enter", "Group", id)
                             }
                         }
                         else
@@ -51,7 +57,7 @@
                             {
                                 <text>Отправлена заявка</text>
                             }
-                            <a href="/Group/Leave/@group.Id">Покинуть группу</a>
+                            @Html.ActionLink("Покинуть группу", "Leave", "Group", id)
                         }
                     }
                 </div>
@@ -64,7 +70,7 @@
     @if (Model.CanCreateGroup)
     {
         <div class="CreateGroup">
-            <a href="/Group/Control">Создать группу</a>
+            @Html.ActionLink("Создать группу", "Control", "Group")
         </div>
     }
 

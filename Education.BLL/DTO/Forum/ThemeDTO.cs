@@ -16,7 +16,7 @@ namespace Education.BLL.DTO.Forum
         public int Id { get; set; }
         public bool Open { get; set; }
         public string Name { get; set; }
-        public AccessDTO Access { get; set; }
+        public FullAccessDTO Access { get; set; }
         public int Pages { get; set; }
         public int CurPage { get; set; }
         public IEnumerable<MessageDTO> Messages { get; set; }

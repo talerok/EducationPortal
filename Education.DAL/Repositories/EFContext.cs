@@ -1,4 +1,5 @@
 ﻿using Education.DAL.Entities;
+using Education.DAL.Entities.Pages;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -37,6 +38,8 @@ namespace Education.DAL.Repositories
             modelBuilder.Entity<Message>().HasOne(x => x.Theme).WithMany(x => x.Messages).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Theme>().HasOne(x => x.Section).WithMany(x => x.Themes).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Section>().HasOne(x => x.Group).WithMany(x => x.Sections).OnDelete(DeleteBehavior.Cascade);
+            //--------------------------------------------------
+            modelBuilder.Entity<Page>().HasOne(x => x.ParentPage).WithMany(x => x.ChildPages).OnDelete(DeleteBehavior.Cascade);
         }
 
 

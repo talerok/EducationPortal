@@ -1,20 +1,21 @@
 ﻿@model Education.BLL.DTO.Forum.SectionDTO
-@*
-    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
-*@
-
+@{ 
+    var id = new { id = Model.Id };
+}
 <div class="Section">
     <div class="Description">
-        <div class="Name"><a href="/Section/Index/@Model.Id"> @Model.Name</a></div>
+        <div class="Name">
+            @Html.ActionLink(Model.Name, "Index", "Section", id)
+        </div>
         <div class="Edit">
             <strong>
                 @if (Model.Access.CanUpdate)
                 {
-                    <a href="/Section/Control/@Model.Id">Редактировать</a>
+                    @Html.ActionLink("Редактировать", "Control", "Section", id)
                 }
                 @if (Model.Access.CanCreateElements)
                 {
-                    <a href="/Theme/Add/@Model.Id">Создать тему</a>
+                    @Html.ActionLink("Создать тему", "Add", "Theme", id)
                 }
             </strong>
         </div>

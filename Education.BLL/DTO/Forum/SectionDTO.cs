@@ -15,7 +15,7 @@ namespace Education.BLL.DTO.Forum
         public int Id { get; set; }
         public bool Open { get; set; }
         public string Name { get; set; }
-        public AccessDTO Access { get; set; }
+        public FullAccessDTO Access { get; set; }
         public IEnumerable<ThemePreviewDTO> Themes { get; set; }
         public SectionRoute Route { get; set; }
     }

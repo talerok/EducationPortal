@@ -1,4 +1,5 @@
-﻿using Education.BLL.DTO.Forum;
+﻿using Education.BLL.DTO;
+using Education.BLL.DTO.Forum;
 using Education.BLL.Logic.Interfaces;
 using Education.DAL.Entities;
 using System;
@@ -109,7 +110,7 @@ namespace Education.BLL.Logic
                 Open = section.Open,
                 Themes = themes,
                 Route = GetRoute(section),
-                Access = new AccessDTO
+                Access = new FullAccessDTO
                 {
                     CanCreateElements = ThemeRules.CanCreate(user, section),
                     CanDelete = SectionRules.CanDelete(user, section),
@@ -130,7 +131,7 @@ namespace Education.BLL.Logic
                 Messages = mres,
                 Id = theme.Id,
                 Route = GetRoute(theme),
-                Access = new AccessDTO
+                Access = new FullAccessDTO
                 {
                     CanCreateElements = MessageRules.CanCreate(user, theme),
                     CanDelete = ThemeRules.CanDelete(user, theme),
@@ -188,7 +189,6 @@ namespace Education.BLL.Logic
                 Route = GetRoute(message),
                 Access = new AccessDTO
                 {
-                    CanCreateElements = false,
                     CanDelete = MessageRules.CanDelete(user, message),
                     CanRead = MessageRules.CanRead(user, message),
                     CanUpdate = MessageRules.CanEdit(user, message)

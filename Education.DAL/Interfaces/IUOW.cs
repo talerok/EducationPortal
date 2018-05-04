@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Education.DAL.Entities;
+using Education.DAL.Entities.Pages;
 
 namespace Education.DAL.Interfaces
 {
@@ -19,7 +20,10 @@ namespace Education.DAL.Interfaces
         IRepos<Section> SectionRepository { get; }
         IRepos<Group> GroupRepository { get; }
         IRepos<UserGroup> UserGroupRepository { get; }
-
+        //------------Pages
+        IRepos<Note> NoteRepository { get; }
+        IRepos<Page> PageRepository { get; }
+        //------------------
         void SaveChanges();
     }
 }

@@ -1,9 +1,7 @@
 ﻿@model Education.BLL.DTO.Forum.SectionDTO
 
 <div class="Navigation">
-    <a href="/">Главная страница</a> >>
-    <a href="/Group/Index/@Model.Route.GroupId">Группа @Model.Route.GroupName</a> >>
-    <a href="/Section/Index/@Model.Id">Секция @Model.Name</a>
+    @await Component.InvokeAsync("Navigation", Model)
 </div>
 
-@Html.Partial("View", Model);
+@Html.Partial("View", Model)
