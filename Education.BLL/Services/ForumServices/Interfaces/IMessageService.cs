@@ -10,5 +10,7 @@ namespace Education.BLL.Services.ForumServices.Interfaces
     public interface IMessageService : IControlService<MessageDTO, MessageEditDTO>
     {
         bool CanCreate(int ThemeId, UserDTO userDTO);
+
+        MessagePreviewDTO Get(int id, UserDTO userDTO);
     }
 }
