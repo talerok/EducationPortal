@@ -37,6 +37,15 @@ namespace Education.Controllers
             else return Redirect(res.Item1);
         }
 
+        private IActionResult GetMessageTheme(int id, UserDTO userDTO)
+        {
+            
+            var message = MessageService.Get(id, userDTO);
+            if (message != null)
+                return RedirectToAction("Index", "Theme", new { id = message.ThemeId, page = message.Page });
+            else return Redirect(AccessCode.NotFound);
+        }
+
         [HttpPost]
         public IActionResult Create(int themeId, string text)
         {
@@ -45,9 +54,10 @@ namespace Education.Controllers
                 ThemeId = themeId,
                 Text = text
             };
-            var res = MessageService.Create(messageDTO, GetUser());
+            var user = GetUser();
+            var res = MessageService.Create(messageDTO, user);
             if (res.Code == AccessCode.Succsess)
-                return RedirectToAction("Index", "Theme", new { id = themeId });
+                return GetMessageTheme(res.Id, user);
             else return Redirect(res.Code);
         }
 
@@ -69,11 +79,7 @@ namespace Education.Controllers
             var user = GetUser();
             var res = MessageService.Update(messageDTO, user);
             if (res == AccessCode.Succsess)
-            {
-                var message = MessageService.Read(id, user);
-                if (message.Item1 == AccessCode.Succsess)
-                    return RedirectToAction("Index", "Theme", new { id = message.Item2.Route.ThemeId });      
-            }
+                return GetMessageTheme(id, user);
             return Redirect(res);
         }
 
