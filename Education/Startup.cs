@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Education.BLL.Services.UserServices.Interfaces;
+using Education.BLL.Services.UserServices.Init;
 using Education.BLL.Services.UserServices.Auth;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Education.DAL.Interfaces;

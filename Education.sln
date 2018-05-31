@@ -3,16 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Education", "Education\Education.csproj", "{1E5A54E6-97AD-4667-BB3F-CEFFBDC1CF7A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Education", "Education\Education.csproj", "{1E5A54E6-97AD-4667-BB3F-CEFFBDC1CF7A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Education.DAL", "Education.DAL\Education.DAL.csproj", "{29BE8B75-7CAA-4C3D-BEA4-4E0247247ED1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Education.DAL", "Education.DAL\Education.DAL.csproj", "{29BE8B75-7CAA-4C3D-BEA4-4E0247247ED1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Education.BLL", "Education.BLL\Education.BLL.csproj", "{93495133-C1E4-4D33-9BF4-D942C73FB1CE}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CFD1B004-7F55-43F0-8128-CECEAEE49896}"
-	ProjectSection(SolutionItems) = preProject
-		Graph1.dgml = Graph1.dgml
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Education.BLL", "Education.BLL\Education.BLL.csproj", "{93495133-C1E4-4D33-9BF4-D942C73FB1CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

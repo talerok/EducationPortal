@@ -148,21 +148,17 @@ namespace Education.BLL.Logic
             return res;
         }
 
-        private IEnumerable<Message> GetMessages(Theme theme, int page = 0)
-        {
-            var messages = theme.Messages.OrderBy(x => x.Time);
-            if (page == 0) return messages;
-            else return messages.Skip((page - 1) * MessagesPerPage)
-                .Take(MessagesPerPage);
-        }
-
         public ThemeDTO GetDTO(Theme theme, User user, int page)
         {
             if (theme == null) return null;
 
             if (page < 1) page = 1;
 
-            var res = CreateThemeDTO(theme, user, GetMessages(theme, page));
+            var messages = theme.Messages.OrderBy(x => x.Time)
+                .Skip((page - 1) * MessagesPerPage)
+                .Take(MessagesPerPage);
+
+            var res = CreateThemeDTO(theme, user, messages);
 
             res.Pages = GetThemePages(theme);
 
@@ -173,7 +169,7 @@ namespace Education.BLL.Logic
         public ThemeDTO GetDTO(Theme theme, User user)
         {
             if (theme == null) return null;
-            var res = CreateThemeDTO(theme, user, GetMessages(theme));
+            var res = CreateThemeDTO(theme, user, theme.Messages);
             res.Pages = 1;
             res.CurPage = 1;
             return res;
@@ -241,13 +237,6 @@ namespace Education.BLL.Logic
                     CanControlUsers = GroupRules.CanControlUsers(user,group)
                 }
             };
-        }
-
-        public MessagePreviewDTO GetDTO(Message message)
-        {
-            var res = GetMessages(message.Theme).ToList();
-            int page = res.IndexOf(message) / MessagesPerPage + 1;
-            return new MessagePreviewDTO { Page = page, ThemeId = message.Theme.Id };
         }
     }
 }

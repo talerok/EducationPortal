@@ -1,4 +1,7 @@
 ﻿using Education.DAL.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Education.DAL.Repositories
 {

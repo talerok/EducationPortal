@@ -131,17 +131,5 @@ namespace Education.BLL.Services.ForumServices
                 return MessageRules.CanCreate(user, theme);
             }
         }
-
-
-        public MessagePreviewDTO Get(int id, UserDTO userDTO)
-        {
-            using (var Data = DataFactory.Get())
-            {
-                var user = GetUserService.Get(userDTO, Data);
-                var message = Data.MessageRepository.Get().FirstOrDefault(x => x.Id == id);
-                if (message == null || !MessageRules.CanRead(user, message)) return null;
-                return forumDTOHelper.GetDTO(message);
-            }
-        }
     }
 }

@@ -16,6 +16,5 @@ namespace Education.BLL.Logic.Interfaces
         MessageDTO GetDTO(Message message, User user);
         GroupPreviewDTO GetDTO(User user, Group group);
         UserGroupDTO GetDTO(UserGroup userGroup);
-        MessagePreviewDTO GetDTO(Message message);
     }
 }

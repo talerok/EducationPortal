@@ -1,4 +1,8 @@
-﻿a, a:hover {
+﻿body{
+    background-image: url("/background.png");
+}
+
+a, a:hover {
     color: #333;
     text-decoration: none;
 }
@@ -32,7 +36,6 @@
     display: table-cell;
     text-align: right;
     padding-right: 30px;
-    min-width: 400px;
 }
 
 .Header .Login text{
@@ -64,6 +67,10 @@
 }
 
 .Header, .Description, .ThemePreview, .Navigation, .Message, .Message .Body .Panel {
+    border-style: solid;
+    border-width: 0px;
+    border-bottom-width: 1px;
+    border-color: lightgray;
 }
 
 .Message .Body .Panel{
@@ -106,9 +113,6 @@
     margin-left: 25px;
     display: table;
     width: calc(100% - 25px);
-    box-shadow: 1px 1px 6px 1px;
-    margin-top: 5px;
-    margin-bottom: 5px;
 }
 
 .ImageManager {
@@ -155,14 +159,9 @@
     display: table-cell;
     border-width: 0;
     border-right: 1px;
-    border-top: 1px;
     border-color: lightgray;
     padding-right: 5px;
     border-style: solid;
-}
-
-.Theme {
-    margin-top: 5px;
 }
 
 .User{
@@ -233,7 +232,6 @@
 .ThemePreview .ThemeInfo {
     display: table-cell;
     vertical-align: middle;
-    padding-left: 10px;
 }
 
 .ThemePreview .LastMessage {
@@ -241,45 +239,9 @@
     margin-right: 10px;
 }
 
-.Description .Name a{
-    color: white;
-}
-
-.Header {
-    background-color: #4083ff;
-    box-shadow: 1px 1px 6px 1px;
-}
-
-.Body .Panel {
-    background-color: #4083ff;
-    color: white;
-    padding-right: 10px;
-}
-
-.Body .Edited {
-    padding-left: 10px;
-}
-
-.Description .Edit {
-    padding-right: 10px;
-}
-
-.Description .Edit a{
-    color: white;
-}
-
-.Header a, .Header text{
-    color: white !important;
-}
-
-.Description {
+.Description{
     display: table;
     width: 100%;
-    background-color: #4083ff;
-    box-shadow: 1px 1px 6px;
-    padding-left: 10px;
-    margin-top: 3px;
-    margin-bottom: 3px;
 }
 
 .Description .Name {
