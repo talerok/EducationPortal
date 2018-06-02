@@ -4,11 +4,9 @@ using System.Text;
 
 namespace Education.BLL.DTO.Pages
 {
-    class BlogDTO
+    class PagesDTO
     {
-        public int Page { get; set; }
-        public int Pages { get; set; }
-        public IEnumerable<NoteDTO> Notes { get; set; }
         public bool CanCreate { get; set; }
+        public IEnumerable<PageDTO> MainPages { get; set; } 
     }
 }

@@ -9,6 +9,7 @@ namespace Education.DAL.Entities.Pages
     public class Note : Entity
     {
         public virtual User Owner { get; set; }
+        public string Preview { get; set; }
         public DateTime Time { get; set; }
         public string Name { get; set; }
         public string Text { get; set; }

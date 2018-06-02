@@ -14,6 +14,7 @@ namespace Education.BLL.Logic
         private IThemeRules ThemeRules;
         private ISectionRules SectionRules;
         private IGroupRules GroupRules;
+        private IDTOHelper DTOHelper;
         private static int MessagesPerPage = 10;
         private SectionRoute GetRoute(Section section)
         {
@@ -47,23 +48,13 @@ namespace Education.BLL.Logic
             };
         }
 
-        public ForumDTOHelper(IMessageRules messageRules, IThemeRules themeRules, ISectionRules sectionRules, IGroupRules groupRules)
+        public ForumDTOHelper(IMessageRules messageRules, IThemeRules themeRules, ISectionRules sectionRules, IGroupRules groupRules, IDTOHelper dtoHelper)
         {
             MessageRules = messageRules;
             ThemeRules = themeRules;
             SectionRules = sectionRules;
             GroupRules = groupRules;
-        }
-
-        private UserPublicInfoDTO GetUser(User user)
-        {
-            if (user == null) return null;
-            return new UserPublicInfoDTO
-            {
-                AvatarPath = user.Info.Avatar,
-                Id = user.Id,
-                Name = user.Info.FullName
-            };
+            DTOHelper = dtoHelper;
         }
 
         public GroupDTO GetDTO(Group group, User user)
@@ -100,7 +91,7 @@ namespace Education.BLL.Logic
                     Id = theme.Id,
                     Pages = GetThemePages(theme),
                     Name = theme.Name,
-                    Owner = GetUser(theme?.Messages?.FirstOrDefault()?.Owner),
+                    Owner = DTOHelper.GetUser(theme?.Messages?.FirstOrDefault()?.Owner),
                     LastMessages = GetDTO(theme?.Messages?.LastOrDefault(), user)
                 });
             return new SectionDTO
@@ -159,13 +150,9 @@ namespace Education.BLL.Logic
         public ThemeDTO GetDTO(Theme theme, User user, int page)
         {
             if (theme == null) return null;
-
             if (page < 1) page = 1;
-
             var res = CreateThemeDTO(theme, user, GetMessages(theme, page));
-
             res.Pages = GetThemePages(theme);
-
             res.CurPage = page;
             return res;
         }
@@ -184,9 +171,9 @@ namespace Education.BLL.Logic
             if (message == null) return null;
             return new MessageDTO
             {
-                LastEditor = GetUser(message.LastEditor),
+                LastEditor = DTOHelper.GetUser(message.LastEditor),
                 LastEditTime = message.LastEditTime,
-                Owner = GetUser(message.Owner),
+                Owner = DTOHelper.GetUser(message.Owner),
                 Time = message.Time,
                 Text = message.Text,
                 Id = message.Id,
@@ -205,7 +192,7 @@ namespace Education.BLL.Logic
         {
             return new UserGroupDTO
             {
-                UserInfo = GetUser(userGroup.User),
+                UserInfo = DTOHelper.GetUser(userGroup.User),
                 Status = userGroup.Status
             };
         }
