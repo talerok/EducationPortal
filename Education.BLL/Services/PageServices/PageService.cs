@@ -12,12 +12,20 @@ using Education.BLL.Services.PageServices.Interfaces;
 
 namespace Education.BLL.Services.PageServices
 {
-    class PageService : IPageService
+    public class PageService : IPageService
     {
         private IUOWFactory DataFactory;
         private IPageRules PageRules;
         private IDTOHelper DTOHelper;
         private IGetUserDTO GetUserService;
+
+        public PageService(IPageRules pageRules, IUOWFactory dataFactory, IGetUserDTO getUserService, IDTOHelper dtoHelper)
+        {
+            PageRules = pageRules;
+            DataFactory = dataFactory;
+            GetUserService = getUserService;
+            DTOHelper = dtoHelper;
+        }
 
         private PagePreviewDTO GetPreviewDTO(Page page)
         {
@@ -39,13 +47,14 @@ namespace Education.BLL.Services.PageServices
         {
             var childPages = new List<PagePreviewDTO>();
             foreach (var cp in page.ChildPages)
-                childPages.Add(GetPreviewDTO(cp));
-            return new PageDTO
+                if(PageRules.CanRead(user, cp))
+                    childPages.Add(GetPreviewDTO(cp));
+
+            var res = new PageDTO
             {
                 ChildPages = childPages,
                 Id = page.Id,
                 Name = page.Name,
-                ParentId = page.ParentPage != null ? page.ParentPage.Id : -1,
                 Published = page.Published,
                 Text = page.Text,
                 Access = new DTO.AccessDTO
@@ -55,23 +64,62 @@ namespace Education.BLL.Services.PageServices
                     CanUpdate = PageRules.CanEdit(user, page)
                 }
             };
+
+            if (page.ParentPage != null)
+            {
+                res.ParentId = page.ParentPage.Id;
+                res.ParentName = page.ParentPage.Name;
+            }
+            else res.ParentId = -1;
+
+            return res;
         }
 
-        public bool CanCreate(UserDTO userDTO)
+        private IEnumerable<PageInfo> GetMap(Page page)
         {
-            using(var Data = DataFactory.Get())
-                return PageRules.CanCreate(GetUserService.Get(userDTO, Data));
+            var res = new List<PageInfo>();
+            foreach (var ch in page.ChildPages)
+            {
+                res.Add(new PageInfo { Id = ch.Id, Name = ch.Name, Childs = GetMap(ch) });
+            }
+            return res;
         }
 
-        public PagesDTO Get(UserDTO userDTO)
+        private bool CheckCycle(Page parent, Page child)
+        {
+            if (parent == child) return false;
+            Page curPage = parent.ParentPage;
+            while (true)
+            {
+                if (curPage == null) return false;
+                if (curPage == parent) return false; // Чтобы не зацикл. 
+                if (curPage == child) return true;
+                curPage = curPage.ParentPage;
+            }
+            
+        }
+
+        public IEnumerable<PageInfo> GenerateMap()
+        {
+            var res = new List<PageInfo>();
+            using(var Data = DataFactory.Get())
+            {
+                var mainPages = Data.PageRepository.Get().Where(x => x.ParentPage == null);
+                foreach(var page in mainPages)
+                    res.Add(new PageInfo { Id = page.Id, Name = page.Name, Childs = GetMap(page) });
+            }
+            return res;
+        }
+
+        public PagesDTO Get(UserDTO userDTO, bool onlyMain = false)
         {
             using(var Data = DataFactory.Get())
             {
                 var user = GetUserService.Get(userDTO, Data);
                 var pages = Data.PageRepository.Get()
-                    .Where(x => x.ParentPage == null && PageRules.CanRead(user, x))
-                    .Select(x => GetDTO(x, user));
-                return new PagesDTO { CanCreate = PageRules.CanCreate(user), MainPages = pages };
+                    .Where(x => PageRules.CanRead(user, x));
+                if (onlyMain) pages = pages.Where(x => x.ParentPage == null);
+                return new PagesDTO { CanCreate = PageRules.CanCreate(user), MainPages = pages.Select(x => GetDTO(x, user)) };
             }    
         }
 
@@ -95,6 +143,13 @@ namespace Education.BLL.Services.PageServices
                 var user = GetUserService.Get(userDTO, Data);
                 if (page == null) return AccessCode.NotFound;
                 if (!PageRules.CanEdit(user, page)) return AccessCode.NoPremision;
+                //-------------------------
+                if(pageEditDTO.ParentId > 0) // Проверка на цикличность
+                {
+                    var parent = Data.PageRepository.Get().FirstOrDefault(x => x.Id == pageEditDTO.ParentId);
+                    if (parent != null && CheckCycle(parent, page)) return AccessCode.Error;
+                }
+                //-------------------------
                 EditPage(page, pageEditDTO, Data);
                 Data.PageRepository.Edited(page);
                 Data.SaveChanges();
@@ -125,9 +180,16 @@ namespace Education.BLL.Services.PageServices
                 var page = new Page();
                 EditPage(page, pageEditDTO, Data);
                 Data.PageRepository.Add(page);
+                //Добавить проверку на цикл
                 Data.SaveChanges();
                 return new CreateResultDTO(page.Id, AccessCode.Succsess);
             }
+        }
+
+        public bool CanCreate(UserDTO userDTO)
+        {
+            using (var Data = DataFactory.Get())
+                return PageRules.CanCreate(GetUserService.Get(userDTO, Data));
         }
     }
 }

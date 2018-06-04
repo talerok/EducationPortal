@@ -1,0 +1,50 @@
+﻿@model Education.Models.PageControl
+
+@{
+    string Name = "", Text = "", Action = "Create", ButtonText = "Создать";
+    bool Published = false;
+    int Id = -1;
+    int? ParrentId = -1;
+    if (Model.PageDTO != null)
+    {
+        Id = Model.PageDTO.Id;
+        ParrentId = Model.PageDTO.ParentId;
+        Name = Model.PageDTO.Name;
+        Text = Model.PageDTO.Text;
+        Action = "Edit";
+        ButtonText = "Сохранить";
+        Published = Model.PageDTO.Published;
+    }
+}
+
+<script type="text/javascript" src="~/editor/nicEdit.js"></script>
+<script type="text/javascript">
+    bkLib.onDomLoaded(function () {
+        new nicEditor({ iconsPath: '/nicEditorIcons.gif', fullPanel: true }).panelInstance('Area');
+    });
+</script>
+
+@using (Html.BeginForm(Action, "Page", FormMethod.Post))
+{
+    @Html.Hidden("Id", Id)
+    <input type="text" name="Name" placeholder="Название страницы" value="@Name" />
+    <textarea cols="50" id="Area" name="Text" style="width:100%; height:300px">@Text</textarea>
+    <label>
+        Опубликовать
+        @Html.CheckBox("Published", Published)
+    </label>
+    <label>
+        Родительская страница
+        @await Component.InvokeAsync("PageMap", new { map = Model.Map, name = "ParentId", SelectedId = ParrentId, Id = Id })
+    </label>
+    <input type="submit" value="@ButtonText" />
+}
+
+@if (Model.PageDTO != null)
+{
+    @using (Html.BeginForm("Remove", "Page", FormMethod.Post))
+    {
+        @Html.Hidden("Id", Id)
+        <input type="submit" value="Удалить страницу" />
+    }
+}

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Education.BLL.Logic.Interfaces
 {
-    interface IPageRules
+    public interface IPageRules
     {
         bool CanCreate(User user);
         bool CanEdit(User user, Page page);

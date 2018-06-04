@@ -22,6 +22,8 @@ using Education.BLL.Services.ForumServices;
 using Education.BLL.Services.ImageManager;
 using Education.BLL.Services.ImageManager.Interfaces;
 using Microsoft.AspNetCore.Http.Features;
+using Education.BLL.Services.PageServices.Interfaces;
+using Education.BLL.Services.PageServices;
 
 namespace Education
 {
@@ -37,7 +39,7 @@ namespace Education
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            string connString = @"Server=(localdb)\mssqllocaldb;Database=EDC;Trusted_Connection=True;";
+            string connString = @"Server=(localdb)\mssqllocaldb;Database=EDCTest;Trusted_Connection=True;";
             //----------------------------------------------------
             IMessenger messenger_sms = new SmsMessenger();
             IMessenger messenger_email = new EmailMessenger();
@@ -107,7 +109,8 @@ namespace Education
             ISectionRules sectionRules = new SectionRules(groupRules);
             IThemeRules themeRules = new ThemeRules(sectionRules);
             IMessageRules messageRules = new MessageRules(themeRules, sectionRules);
-            IForumDTOHelper forumDTOHelper = new ForumDTOHelper(messageRules, themeRules, sectionRules, groupRules);
+            IDTOHelper dtoHelper = new DTOHelper();
+            IForumDTOHelper forumDTOHelper = new ForumDTOHelper(messageRules, themeRules, sectionRules, groupRules, dtoHelper);
             IGetUserDTO getUserDTO = new GetUserDTO();
 
             services.AddSingleton<IGroupService,GroupService>(
@@ -143,6 +146,23 @@ namespace Education
               {
                  return new ForumService(getUserDTO, UOWFactory, forumDTOHelper, groupRules);
               }
+            );
+            //--------------------Page Services--------------------
+            IPageRules pageRules = new PageRules();
+            INoteRules noteRules = new NoteRules();
+
+            services.AddSingleton<IPageService, PageService>(
+                 serviceProvider =>
+                    {
+                        return new PageService(pageRules, UOWFactory, getUserDTO, dtoHelper);
+                    }
+            );
+
+            services.AddSingleton<IBlogService, BlogService>(
+                 serviceProvider =>
+                 {
+                     return new BlogService(noteRules, UOWFactory, getUserDTO, dtoHelper);
+                 }
             );
 
             //-------------------------------------------------------

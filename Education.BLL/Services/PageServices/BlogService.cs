@@ -2,6 +2,7 @@
 using Education.BLL.DTO.Pages;
 using Education.BLL.DTO.User;
 using Education.BLL.Logic.Interfaces;
+using Education.BLL.Services.PageServices.Interfaces;
 using Education.DAL.Entities;
 using Education.DAL.Entities.Pages;
 using Education.DAL.Interfaces;
@@ -11,13 +12,21 @@ using System.Linq;
 
 namespace Education.BLL.Services.PageServices
 {
-    class BlogService
+    public class BlogService : IBlogService
     {
         private const int NotesPerPage = 10;
         private INoteRules NoteRules;
         private IUOWFactory DataFactory;
         private IGetUserDTO GetUserService;
         private IDTOHelper DTOHelper;
+
+        public BlogService(INoteRules noteRules, IUOWFactory dataFactory, IGetUserDTO getUserService, IDTOHelper dtoHelper)
+        {
+            NoteRules = noteRules;
+            DataFactory = dataFactory;
+            GetUserService = getUserService;
+            DTOHelper = dtoHelper;
+        }
 
         private NoteDTO GetDTO(Note note, User user)
         {
@@ -62,6 +71,18 @@ namespace Education.BLL.Services.PageServices
         {
             return Data.NoteRepository.Get().Skip((page - 1) * NotesPerPage)
             .Take(NotesPerPage);
+        }
+
+        public (AccessCode,NoteDTO) Get(int id, UserDTO userDTO)
+        {
+            using(var Data = DataFactory.Get())
+            {
+                var note = Data.NoteRepository.Get().FirstOrDefault(x => x.Id == id);
+                var user = GetUserService.Get(userDTO,Data);
+                if (note == null) return (AccessCode.NotFound, null);
+                if (!NoteRules.CanRead(user,note)) return (AccessCode.NoPremision, null);
+                return (AccessCode.Succsess, GetDTO(note, user));
+            }
         }
 
         public BlogDTO Get(UserDTO userDTO, int page)
@@ -116,13 +137,18 @@ namespace Education.BLL.Services.PageServices
             {
                 var user = GetUserService.Get(userDTO, Data);
                 if (!NoteRules.CanCreate(user)) return CreateResultDTO.NoPremision;
-                var note = new Note();
-                note.Owner = user;
+                var note = new Note { Owner = user };
                 EditNote(note, noteEditDTO);
                 Data.NoteRepository.Add(note);
                 Data.SaveChanges();
                 return new CreateResultDTO(note.Id, AccessCode.Succsess);
             }
+        }
+
+        public bool CanCreate(UserDTO userDTO)
+        {
+            using (var Data = DataFactory.Get())
+                return NoteRules.CanCreate(GetUserService.Get(userDTO, Data));
         }
 
     }

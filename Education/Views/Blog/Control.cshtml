@@ -1,0 +1,70 @@
+﻿@model Education.BLL.DTO.Pages.NoteEditDTO
+
+@{
+    string Name = "", Text = "", Action = "Create", ButtonText = "Создать";
+    string Preview = "";
+    bool Published = false;
+    int Id = -1;
+    if (Model != null)
+    {
+        Id = Model.Id;
+        Preview = Model.Preview;
+        Name = Model.Name;
+        Text = Model.Text;
+        Action = "Edit";
+        ButtonText = "Сохранить";
+        Published = Model.Published;
+    }
+}
+
+<script src="/lib/jquery/dist/jquery.js"></script>
+
+<img class="BlogPreview" id="Preview" src="@Preview" />
+<input type="button" onclick="ShowArea()" value="Сменить превью" />
+
+@Html.Partial("~/Views/ImageManager/Index.cshtml")
+
+<script type="text/javascript" src="~/editor/nicEdit.js"></script>
+
+<script type="text/javascript">
+    bkLib.onDomLoaded(function () {
+        new nicEditor({ iconsPath: '/nicEditorIcons.gif', fullPanel: true }).panelInstance('TextArea');
+    });
+</script>
+
+<script>
+    var OnSelect = function (url) {
+        $("#Preview").attr("src", url);
+        $("#SendPreview").attr("value", url);
+        HideArea();
+    }
+</script>
+
+@using (Html.BeginForm(Action, "Blog", FormMethod.Post))
+{
+    /*
+     public int Id { get; set; }
+        public string Preview { get; set; }
+        public string Name { get; set; }
+        public string Text { get; set; }
+        public bool Published { get; set; }
+     */
+    @Html.Hidden("Id", Id)
+    <input type="hidden" name="Preview" id="SendPreview" value="@Preview" />
+    <input type="text" name="Name" placeholder="Название страницы" value="@Name" />
+    <textarea cols="50" id="TextArea" name="Text" style="width:100%; height:300px">@Text</textarea>
+    <label>
+        Опубликовать
+        @Html.CheckBox("Published", Published)
+    </label>
+    <input type="submit" value="@ButtonText" />
+}
+
+@if (Model != null)
+{
+    @using (Html.BeginForm("Remove", "Blog", FormMethod.Post))
+    {
+        @Html.Hidden("Id", Id)
+        <input type="submit" value="Удалить запись" />
+    }
+}

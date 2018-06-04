@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Education.BLL.DTO.Pages
 {
-    class PageEditDTO : PagePreviewDTO
+    public class PageEditDTO : PagePreviewDTO
     {
         public int? ParentId { get; set; }
         public string Text { get; set; }

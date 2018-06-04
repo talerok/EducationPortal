@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Education.BLL.DTO.Pages
 {
-    class NoteDTO : NoteEditDTO
+    public class NoteDTO : NoteEditDTO
     {
         public DateTime Time { get; set; }
         public UserPublicInfoDTO Owner { get; set; }

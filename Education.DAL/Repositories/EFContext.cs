@@ -28,6 +28,7 @@ namespace Education.DAL.Repositories
             modelBuilder.Entity<Group>().ToTable("Groups");
             modelBuilder.Entity<Section>().ToTable("Sections");
             modelBuilder.Entity<Theme>().ToTable("Themes");
+            modelBuilder.Entity<Note>().ToTable("Notes");
             //-------------------------------------------------
             modelBuilder.Entity<UserGroup>().HasKey(x => new { x.UserId, x.GroupId });
             modelBuilder.Entity<UserGroup>()
@@ -39,7 +40,7 @@ namespace Education.DAL.Repositories
             modelBuilder.Entity<Theme>().HasOne(x => x.Section).WithMany(x => x.Themes).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Section>().HasOne(x => x.Group).WithMany(x => x.Sections).OnDelete(DeleteBehavior.Cascade);
             //--------------------------------------------------
-            modelBuilder.Entity<Page>().HasOne(x => x.ParentPage).WithMany(x => x.ChildPages).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Page>().HasOne(x => x.ParentPage).WithMany(x => x.ChildPages).OnDelete(DeleteBehavior.Restrict);
         }
 
 

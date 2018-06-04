@@ -29,7 +29,6 @@ namespace Education.Controllers
         {
             return ClaimService.GetUser(User.Claims);
         }
- 
 
         public IActionResult Index(int id)
         {

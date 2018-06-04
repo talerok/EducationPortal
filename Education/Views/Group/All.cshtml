@@ -1,0 +1,81 @@
+﻿@model Education.BLL.DTO.Forum.ForumDTO
+
+@{
+    ViewData["Title"] = "Группы";
+}
+
+<div class="Groups">
+    <div class="Description">
+        <div class="Name">
+            @Html.ActionLink("Группы", "Index", "Home")
+        </div>
+        <div class="Edit">
+            @if (Model.CanCreateGroup)
+            {
+                @Html.ActionLink("Создать группу", "Control", "Group")
+            }
+        </div>
+    </div>
+    <div class="All">
+        @foreach (var group in Model.Groups)
+        {
+            var id = new { id = group.Id };
+            <div class="Group">
+                <img class="Logo" src="@group.Logo" />
+                <div class="Info">
+                    @if (group.Access.CanRead)
+                    {
+                        <div class="Name">
+                            @Html.ActionLink("Группа " + group.Name, "Index", "Group", id)
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="Name">Группа @group.Name</div>
+                    }
+                    <div>
+                        @(group.Open ? "Открытая группа" : "Закрытая группа")
+
+                        @if (group.Access.CanUpdate)
+                        {
+                            <strong>
+                                @Html.ActionLink("Редактировать", "Control", "Group", id)
+                            </strong>
+                        }
+                    </div>
+                    <div>
+                        @if (!group.Open && group.Status != null)
+                        {
+                            @if (!group.Status.Member)
+                            {
+                                if (!group.Access.CanRead)
+                                {
+                                    @Html.ActionLink("Подать заявку", "Enter", "Group", id)
+                                }
+                            }
+                            else
+                            {
+                                <text>Роль: </text>
+                                if (group.Status.Status == Education.DAL.Entities.UserGroupStatus.member)
+                                {
+                                    <text>Участник</text>
+                                }
+                                else if (group.Status.Status == Education.DAL.Entities.UserGroupStatus.owner)
+                                {
+                                    <text>Модератор</text>
+                                }
+                                else if (group.Status.Status == Education.DAL.Entities.UserGroupStatus.request)
+                                {
+                                    <text>Отправлена заявка</text>
+                                }
+                                @Html.ActionLink("Покинуть группу", "Leave", "Group", id)
+                            }
+                        }
+                    </div>
+
+                </div>
+            </div>
+
+        }
+    </div>
+</div>

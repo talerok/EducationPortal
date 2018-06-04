@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Education.BLL.Logic.Interfaces
 {
-    interface INoteRules
+    public interface INoteRules
     {
         bool CanCreate(User user);
         bool CanEdit(User user, Note note);

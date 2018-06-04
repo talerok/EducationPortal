@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Education.BLL.Logic
 {
-    class DTOHelper : IDTOHelper
+    public class DTOHelper : IDTOHelper
     {
         public UserPublicInfoDTO GetUser(User user)
         {

@@ -1,0 +1,33 @@
+﻿@model Education.BLL.DTO.Pages.PageDTO
+
+<div class="Navigation">
+    @await Component.InvokeAsync("Navigation", Model)
+</div>
+<div class="Page">
+    <div class="Description">
+        <div class="Name">
+            @Html.ActionLink(Model.Name, "Index", new { id = Model.Id })
+        </div>
+        <div class="Edit">
+            @if (Model.Access.CanUpdate)
+            {
+                @Html.ActionLink("Редактировать", "Control", "Page", new { id = Model.Id })
+            }
+        </div>
+    </div>
+    <div class="Text">
+        @Html.Raw(Model.Text)
+    </div>
+    @if (Model.ChildPages != null && Model.ChildPages.Any())
+    {
+        <div class="ChildPages">
+            <text>Допонительная информация:</text>
+            <ol>
+                @foreach (var page in Model.ChildPages)
+                {
+                    <li>@Html.ActionLink(page.Name, "Index", new { id = page.Id })</li>
+                }
+            </ol>
+        </div>
+    }
+</div>

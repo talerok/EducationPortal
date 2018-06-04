@@ -1,0 +1,21 @@
+﻿@model Education.BLL.DTO.Pages.NoteDTO
+
+<div class="Note">
+    <div class="Description">
+        <div class="Name">
+            @Html.ActionLink(Model.Name, "Index", "Blog", new { id = Model.Id })
+        </div>
+        <div class="Edit">
+            @if (Model.Access.CanUpdate)
+            {
+                @Html.ActionLink("Редактировать", "Control", "Blog", new { id = Model.Id })
+            }
+        </div>
+    </div>
+    <img class="Prev" src="@Model.Preview" />
+    <div class="Text">
+        @Html.Raw(Model.Text)
+    </div>
+    <div class="Edited">@Model.Owner.Name, @Model.Time</div>
+</div>
+

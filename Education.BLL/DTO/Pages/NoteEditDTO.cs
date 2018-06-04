@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Education.BLL.DTO.Pages
 {
-    class NoteEditDTO
+    public class NoteEditDTO
     {
         public int Id { get; set; }
         public string Preview { get; set; }

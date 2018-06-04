@@ -47,11 +47,6 @@ namespace Education.Controllers
         [HttpPost]
         public IActionResult Create(ThemeRequest themeRequest)
         {
-            /*Only first message will be Added, 
-              owner of this message will be owner of this theme
-              other messages wil be ignored!*/
-
-
             var theme = new ThemeEditDTO
             {
                 Name = themeRequest.Name,

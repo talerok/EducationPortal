@@ -1,4 +1,5 @@
 ﻿using Education.BLL.DTO.Forum;
+using Education.BLL.DTO.Pages;
 using Microsoft.AspNetCore.Html;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,16 @@ namespace Education.Components
                 + sep + @"<a href=""/Theme/Index/"+ id + @""">Тема " + name + "</a>";
         }
 
+        private string PageNavigation(PageDTO pageDTO)
+        {
+            string res;
+            if (pageDTO.ParentId > 0)
+                res = @"<a href=""/Page/Index/" + pageDTO.ParentId + @""">" + pageDTO.ParentName + "</a>" + sep;
+            else res = "";
+            res += @"<a href=""/Page/Index/" + pageDTO.Id + @""">" + pageDTO.Name + "</a>";
+            return res;
+        }
+
         public HtmlString Invoke(Object DTO)
         {
             if (DTO is GroupDTO)
@@ -49,6 +60,10 @@ namespace Education.Components
             {
                 var _DTO = DTO as ThemeDTO;
                 return new HtmlString(ThemeNavigation(_DTO.Id, _DTO.Name, _DTO.Route));
+            }
+            else if(DTO is PageDTO)
+            {
+                return new HtmlString(PageNavigation(DTO as PageDTO));
             }
             else return new HtmlString("");
         }

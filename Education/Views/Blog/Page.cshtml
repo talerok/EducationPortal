@@ -1,0 +1,19 @@
+﻿@model Education.BLL.DTO.Pages.BlogDTO
+
+<div class="Description">
+    <div class="Name">
+        @Html.ActionLink("Блог", "Page", "Blog")
+    </div>
+    <div class="Edit">
+        @if (Model.CanCreate)
+        {
+            @Html.ActionLink("Создать запись", "Control", "Blog")
+        }
+    </div>
+</div>
+@foreach(var note in Model.Notes)
+{
+    @Html.Partial("~/Views/Blog/Index.cshtml", note)
+    <hr />
+}
+@await Component.InvokeAsync("Paging", new { url = "/Blog/Page/", page = Model.Page, pages = Model.Pages })

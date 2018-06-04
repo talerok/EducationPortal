@@ -7,11 +7,13 @@ using System.Text;
 
 namespace Education.BLL.Services.PageServices.Interfaces
 {
-    interface IBlogService
+    public interface IBlogService
     {
         CreateResultDTO Create(NoteEditDTO noteEditDTO, UserDTO userDTO);
         AccessCode Delete(int id, UserDTO userDTO);
         AccessCode Update(NoteEditDTO noteEditDTO, UserDTO userDTO);
         BlogDTO Get(UserDTO userDTO, int page);
+        (AccessCode, NoteDTO) Get(int id, UserDTO userDTO);
+        bool CanCreate(UserDTO userDTO);
     }
 }

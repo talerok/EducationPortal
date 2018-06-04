@@ -4,9 +4,10 @@ using System.Text;
 
 namespace Education.BLL.DTO.Pages
 {
-    public class PagePreviewDTO
+    public class PageInfo
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public IEnumerable<PageInfo> Childs { get; set; }
     }
 }
