@@ -48,8 +48,16 @@ namespace Education
             IKeyGenerator bigKeyGenerator = new BigKeyGenerator();
             IRegValidator regValidator = new RegValidator();
             IUOWFactory UOWFactory = new EFUOWFactory(connString);
+            IGetUserDTO getUserDTO = new GetUserDTO();
             //----------------------------------------------------
             IClaimService claimService = new ClaimService(UOWFactory);
+            //----------------------------------------------------
+            services.AddSingleton<IGetUserDTO, IGetUserDTO>(
+                   serviceProvider =>
+                   {
+                       return getUserDTO;
+                   }
+               );
             //----------------------------------------------------
             services.AddSingleton<IUOWFactory, IUOWFactory>(
                 serviceProvider =>
@@ -71,7 +79,8 @@ namespace Education
                         passHasher,
                         regValidator,
                         claimService,
-                        bigKeyGenerator
+                        bigKeyGenerator,
+                        getUserDTO
                         );
                 }
             );
@@ -91,7 +100,8 @@ namespace Education
                        emailCS,
                        phoneCS,
                        passHasher,
-                       claimService
+                       claimService,
+                       getUserDTO
                       );
                }
            );
@@ -111,7 +121,6 @@ namespace Education
             IMessageRules messageRules = new MessageRules(themeRules, sectionRules);
             IDTOHelper dtoHelper = new DTOHelper();
             IForumDTOHelper forumDTOHelper = new ForumDTOHelper(messageRules, themeRules, sectionRules, groupRules, dtoHelper);
-            IGetUserDTO getUserDTO = new GetUserDTO();
 
             services.AddSingleton<IGroupService,GroupService>(
               serviceProvider =>
@@ -225,9 +234,18 @@ public static class PrincipalValidator
         Task task = new Task(() =>
         {
             if (context == null) throw new System.ArgumentNullException(nameof(context));
-            var authService = context.HttpContext.RequestServices.GetRequiredService<IClaimService>();
-            var user = authService.GetUser(context.Principal.Claims);
-            if (user == null) context.RejectPrincipal();
+            var ClaimService = context.HttpContext.RequestServices.GetRequiredService<IClaimService>();
+            var userDTO = ClaimService.GetUser(context.Principal.Claims);
+            if (userDTO == null) return;
+
+            var GetUserService = context.HttpContext.RequestServices.GetRequiredService<IGetUserDTO>();
+            var DataFactory = context.HttpContext.RequestServices.GetRequiredService<IUOWFactory>();
+
+            using (var Data = DataFactory.Get())
+            {
+                var user = GetUserService.Get(userDTO, Data);
+                if (user == null) context.RejectPrincipal();
+            }  
         });
         task.Start();
         return task;

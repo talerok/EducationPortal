@@ -81,11 +81,11 @@ namespace Education.Controllers
         [ValidateRecaptcha]
         public IActionResult Register(RegRequest regRequest)
         {
-            var userDTO = new UserDTO
+            var userDTO = new RegUserInfo
             {
                 Email = regRequest.Email,
-                PhoneNumber = regRequest.PhoneNumber,
-                FullName = regRequest.FullName,
+                Phone = regRequest.PhoneNumber,
+                Name = regRequest.FullName,
                 Login = regRequest.Login,
                 Password = regRequest.Password
             };

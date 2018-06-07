@@ -8,6 +8,7 @@ using Education.BLL.DTO;
 using Education.DAL.Entities;
 using Education.DAL.Interfaces;
 using Education.BLL.Services.UserServices.Interfaces;
+using Education.BLL.Logic.Interfaces;
 
 namespace Education.BLL.Services.UserServices.Auth
 {
@@ -19,6 +20,7 @@ namespace Education.BLL.Services.UserServices.Auth
         private IPassHasher PassHasher;
         private IRegValidator RegValidator;
         private IKeyGenerator KeyGenerator;
+        private IGetUserDTO GetUserService;
         public IClaimService ClaimService { get; private set; }
 
         public UserAuthService(IUOWFactory iuowf, 
@@ -27,7 +29,8 @@ namespace Education.BLL.Services.UserServices.Auth
             IPassHasher passHasher,
             IRegValidator regValidator,
             IClaimService claimService,
-            IKeyGenerator keyGenerator)
+            IKeyGenerator keyGenerator,
+            IGetUserDTO getUserDTO)
         {
             DataFactory = iuowf;
             EmailAuthService = emailAuthService;
@@ -36,6 +39,7 @@ namespace Education.BLL.Services.UserServices.Auth
             RegValidator = regValidator;
             ClaimService = claimService;
             KeyGenerator = keyGenerator;
+            GetUserService = getUserDTO;
 
         }
       
@@ -52,18 +56,7 @@ namespace Education.BLL.Services.UserServices.Auth
                 x.Email != null && x.Email.Confirmed && x.Email.Value == login.ToLower());
         }
 
-        private User GetUser(UserDTO userDTO, IUOW Data)
-        {
-            return Data.UserRepository.Get().FirstOrDefault(
-                x =>
-                x.Password == userDTO.Password
-                &&
-                x.Login == userDTO.Login.ToLower()
-                ||
-                x.Phone != null && x.Phone.Confirmed && x.Phone.Value == userDTO.PhoneNumber.ToLower()
-                ||
-                x.Email != null && x.Email.Confirmed && x.Email.Value == userDTO.Email.ToLower());
-        }
+        
 
         private AuthResult KeyLogin(User user, LoginInfoDTO loginInfoDTO, IUOW Data)
         {
@@ -115,29 +108,29 @@ namespace Education.BLL.Services.UserServices.Auth
             ClaimService.Logout(claims);
         }
                      
-        public RegisterResult Register(UserDTO userDTO)
+        public RegisterResult Register(RegUserInfo userInfo)
         {
             using (var Data = DataFactory.Get())
             {
-                var info = new UserInfo { FullName = userDTO.FullName };
-                var check = RegValidator.Check(userDTO, Data);
+                var info = new UserInfo { FullName = userInfo.Name };
+                var check = RegValidator.Check(userInfo, Data);
                 if (check != RegisterResult.Confirm) return check;
                 var newUser = new User
                 {
                     Info = info,
-                    Login = userDTO.Login.ToLower(),
-                    Password = PassHasher.Get(userDTO.Password)
+                    Login = userInfo.Login.ToLower(),
+                    Password = PassHasher.Get(userInfo.Password)
                 };
 
                 Contact email = null;
                 Contact phone = null;
 
-                if (!String.IsNullOrEmpty(userDTO.Email)) {
-                    email = new Contact { Value = userDTO.Email.ToLower(), Confirmed = false };
+                if (!String.IsNullOrEmpty(userInfo.Email)) {
+                    email = new Contact { Value = userInfo.Email.ToLower(), Confirmed = false };
                 }
-                if (!String.IsNullOrEmpty(userDTO.PhoneNumber))
+                if (!String.IsNullOrEmpty(userInfo.Phone))
                 {
-                    phone = new Contact { Value = userDTO.PhoneNumber, Confirmed = false };
+                    phone = new Contact { Value = userInfo.Phone, Confirmed = false };
                 }
 
                 newUser.Phone = phone;
@@ -152,8 +145,7 @@ namespace Education.BLL.Services.UserServices.Auth
         {
             using (var Data = DataFactory.Get())
             {
-                var user = GetUser(userDTO, Data);
-                ClaimService.RemoveAllClaims(user, Data);
+                ClaimService.RemoveAllClaims(GetUserService.Get(userDTO,Data),Data);
             }
         }
 

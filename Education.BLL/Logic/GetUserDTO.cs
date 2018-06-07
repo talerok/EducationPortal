@@ -5,17 +5,25 @@ using Education.DAL.Interfaces;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using System;
 
 namespace Education.BLL.Logic
 {
     public class GetUserDTO : IGetUserDTO
     {
+        private bool CheckBan(User user)
+        {
+            if (user.Ban == null) return false;
+            if (user.Ban.EndTime < DateTime.Now) return true;
+            else return false;
+        }
+
         public User Get(UserDTO userDTO, IUOW Data)
         {
             if (userDTO == null) return null;
-            var name = userDTO.Login.ToLower();
-            return Data.UserRepository.Get().FirstOrDefault(x => x.Login == name
-            && x.Password == userDTO.Password);
+            var user = Data.UserRepository.Get().FirstOrDefault(x => x.Id == userDTO.Id);
+            if (CheckBan(user)) return null;
+            return user;
         }
     }
 }

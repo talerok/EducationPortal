@@ -36,6 +36,6 @@ namespace Education.BLL.Services.UserServices.Interfaces
         CheckResult checkLogin(string login, IUOW Data);
         CheckResult checkPassword(string password);
         CheckResult checkFullName(string fullname);
-        RegisterResult Check(UserDTO userDTO, IUOW Data);
+        RegisterResult Check(RegUserInfo userDTO, IUOW Data);
     }
 }

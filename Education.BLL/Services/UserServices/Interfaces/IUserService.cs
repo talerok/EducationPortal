@@ -22,7 +22,7 @@ namespace Education.BLL.Services.UserServices.Interfaces
     {
         IClaimService ClaimService { get; }
         AuthResult Login(LoginInfoDTO loginInfoDTO);
-        RegisterResult Register(UserDTO user);
+        RegisterResult Register(RegUserInfo user);
         void Logout(IEnumerable<Claim> claims);
         void ResetClaims(UserDTO userDTO);
 

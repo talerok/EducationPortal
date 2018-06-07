@@ -15,25 +15,15 @@ namespace Education.BLL.Services.UserServices.Auth
     {
         private IUOWFactory DataFactory;
 
+        class ClaimNames
+        { 
+            public static string UserID = "UserId";
+            public static string SessionID = "SessionID";
+            public static string SessionValue = "SessionValue";
+        }
         public ClaimService(IUOWFactory uowf)
         {
             DataFactory = uowf;
-        }
-
-        public User GetUser(UserDTO userDTO, IUOW Data)
-        {
-            var login = userDTO.Login.ToLower();
-            var email = userDTO.Email.ToLower();
-            var phone = userDTO.PhoneNumber.ToLower();
-            return Data.UserRepository.Get().FirstOrDefault(x => x.Login == login
-            && x.Password == userDTO.Password);
-        }
-
-        private User GetUser(LoginInfoDTO loginInfoDTO, IUOW Data)
-        {
-            var name = loginInfoDTO.Login.ToLower();
-            return Data.UserRepository.Get().FirstOrDefault(x => x.Login == name
-            && x.Password == loginInfoDTO.Password);
         }
 
         private UserClaim GenerateClaim(User user, LoginInfoDTO loginInfoDTO)
@@ -49,13 +39,12 @@ namespace Education.BLL.Services.UserServices.Auth
             return claim;
         }
 
-        private User Generate(IEnumerable<Claim> claims, IUOW Data)
+        private UserDTO Generate(IEnumerable<Claim> claims)
         {
-            var a = claims.FirstOrDefault(x => x.Type == ClaimsIdentity.DefaultNameClaimType);
-            if (a == null) return null;
-            var claim = Data.UserClaimRepository.Get().FirstOrDefault(x => x.Value == a.Value);
-            if (claim == null) return null;
-            return claim.User;
+            var idClaim = claims.FirstOrDefault(x => x.Type == ClaimNames.UserID);
+            var sIdClaim = claims.FirstOrDefault(x => x.Type == ClaimNames.SessionID);
+            if (idClaim == null || sIdClaim == null) return null;
+            return new UserDTO { Id = int.Parse(idClaim.Value), ClaimId = int.Parse(sIdClaim.Value) };
         }
 
         public void RemoveAllClaims(User user, IUOW Data, params string[] without)
@@ -76,33 +65,27 @@ namespace Education.BLL.Services.UserServices.Auth
         //---------------------------------------------------
         public UserDTO GetUser(IEnumerable<Claim> claims)
         {
-            using (var Data = DataFactory.Get())
+            try
             {
-                var user = Generate(claims, Data);
-                if (user == null) return null;
-                if (user.Ban != null && DateTime.Now < user.Ban.EndTime) return null;
-                var userDTO = new UserDTO
-                {
-                    Id = user.Id,
-                    Login = user.Login,
-                    Email = user.Email?.Value,
-                    PhoneNumber = user.Phone?.Value,
-                    FullName = user.Info?.FullName,
-                    Password = user.Password
-                };
-                return userDTO;
+                return Generate(claims);
             }
+            catch
+            {
+                return null;
+            }   
         }
         //---------------------------------------------------
         public ClaimsIdentity Generate(User user, IUOW Data, LoginInfoDTO loginInfoDTO)
         {
-             if (user == null || loginInfoDTO == null) return null;
+            if (user == null || loginInfoDTO == null) return null;
             var claim = GenerateClaim(user, loginInfoDTO);
             Data.UserClaimRepository.Add(claim);
             Data.SaveChanges();
             var claims = new List<Claim>
             {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, claim.Value),
+                new Claim(ClaimNames.UserID, user.Id.ToString()),
+                new Claim(ClaimNames.SessionID, claim.Id.ToString()),
+                new Claim(ClaimNames.SessionValue, claim.Value.ToString()),
             };
             return new ClaimsIdentity(claims, "ApplicationCookie");
          
@@ -113,7 +96,7 @@ namespace Education.BLL.Services.UserServices.Auth
             if (claims == null) return;
             using (var Data = DataFactory.Get())
             {
-                var a = claims.FirstOrDefault(x => x.Type == ClaimsIdentity.DefaultNameClaimType);
+                var a = claims.FirstOrDefault(x => x.Type == ClaimNames.SessionValue);
                 var claim = Data.UserClaimRepository.Get().FirstOrDefault(x => x.Value == a.Value);
                 if (claim == null) return;
                 Data.UserClaimRepository.Delete(claim);

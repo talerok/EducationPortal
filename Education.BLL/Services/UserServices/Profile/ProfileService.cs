@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Education.BLL.Services.ImageManager.Interfaces;
+using Education.BLL.Logic.Interfaces;
 
 namespace Education.BLL.Services.UserServices.Profile
 {
@@ -24,6 +25,7 @@ namespace Education.BLL.Services.UserServices.Profile
 
         private IConfirmService EmailService;
         private IConfirmService PhoneService;
+        private IGetUserDTO GetUserService;
 
         public IClaimService ClaimService { get; private set; }
 
@@ -33,7 +35,8 @@ namespace Education.BLL.Services.UserServices.Profile
             IConfirmService emailCS, 
             IConfirmService phoneCS, 
             IPassHasher passHasher,
-            IClaimService claimService) 
+            IClaimService claimService,
+            IGetUserDTO getUserDTO) 
         {
             DataFactory = uowf;
             RegValidator = regValidator;
@@ -41,14 +44,7 @@ namespace Education.BLL.Services.UserServices.Profile
             PhoneService = phoneCS;
             PassHasher = passHasher;
             ClaimService = claimService;
-        }
-
-        private User GetUser(UserDTO userDTO, IUOW Data)
-        {
-            if (userDTO == null) return null; 
-            var name = userDTO.Login.ToLower();
-            return Data.UserRepository.Get().FirstOrDefault(x => x.Login == name
-            && x.Password == userDTO.Password);
+            GetUserService = getUserDTO;
         }
 
         private void SetPassword(User user, string password, IUOW Data)
@@ -62,7 +58,7 @@ namespace Education.BLL.Services.UserServices.Profile
 
         private ConfirmResult ConfirmContact(UserDTO userDTO, string propertyName, Func<Contact, IUOW, string, ConfirmResult> func, IUOW Data, string key = null)
         {
-            var User = GetUser(userDTO,Data);
+            var User = GetUserService.Get(userDTO, Data);
             if (User == null) return new ConfirmResult { Status = ConfirmCode.UserNotFound };
             var Property = User.GetType().GetProperty(propertyName);
             var Contact = Property.GetValue(User) as Contact;
@@ -89,7 +85,7 @@ namespace Education.BLL.Services.UserServices.Profile
 
         private SetContactCode SetContact(UserDTO userDTO, string value, string propertyName, Func<string, IUOW, CheckResult> checkFunc, IUOW Data)
         {
-            var User = GetUser(userDTO, Data);
+            var User = GetUserService.Get(userDTO, Data);
             if (User == null) return SetContactCode.UserNotFound;
             if (User.GetType().GetProperty(propertyName).GetValue(User) != null) return SetContactCode.AlreadySet;
             var check = checkFunc(value, Data);
@@ -128,7 +124,7 @@ namespace Education.BLL.Services.UserServices.Profile
         {
             using (var Data = DataFactory.Get())
             {
-                var User = GetUser(userDTO, Data);
+                var User = GetUserService.Get(userDTO, Data);
                 if (User == null) return new ConfirmResult { Status = ConfirmCode.UserNotFound };
                 return RemoveContact(User, EmailPropertyName, EmailService.Remove, AuthType.Email, Data, key);
             }
@@ -138,7 +134,7 @@ namespace Education.BLL.Services.UserServices.Profile
         {
             using (var Data = DataFactory.Get())
             {
-                var User = GetUser(userDTO, Data);
+                var User = GetUserService.Get(userDTO, Data);
                 if (User == null) return new ConfirmResult { Status = ConfirmCode.UserNotFound };
                 return RemoveContact(User, PhonePropertyName, PhoneService.Remove, AuthType.Phone, Data, key);
             }
@@ -166,7 +162,7 @@ namespace Education.BLL.Services.UserServices.Profile
         {
             using (var Data = DataFactory.Get())
             {
-                var user = GetUser(userDTO,Data);
+                var user = GetUserService.Get(userDTO, Data);
                 if (user == null) return null;
                 return new UserProfileDTO
                 {
@@ -186,7 +182,7 @@ namespace Education.BLL.Services.UserServices.Profile
         {
             using (var Data = DataFactory.Get())
             {
-                var User = GetUser(userDTO,Data);
+                var User = GetUserService.Get(userDTO, Data);
                 ConfirmResult res;
                 if (User == null) return new ConfirmResult { Status = ConfirmCode.UserNotFound };
                 if (User.authType == AuthType.Simple) return new ConfirmResult { Status = ConfirmCode.Success };
@@ -211,7 +207,7 @@ namespace Education.BLL.Services.UserServices.Profile
             using (var Data = DataFactory.Get())
             {
                 ConfirmResult res;
-                var User = GetUser(userDTO, Data);
+                var User = GetUserService.Get(userDTO, Data);
                 if (User == null) return new ConfirmResult { Status = ConfirmCode.UserNotFound };
                 if (User.authType != AuthType.Simple) return new ConfirmResult { Status = ConfirmCode.NeedContact };
                 if (authType == AuthType.Simple) return new ConfirmResult { Status = ConfirmCode.Success };
@@ -239,7 +235,7 @@ namespace Education.BLL.Services.UserServices.Profile
         {
             using (var Data = DataFactory.Get())
             {
-                var user = GetUser(userDTO, Data);
+                var user = GetUserService.Get(userDTO, Data);
                 if (user == null) return ConfirmCode.UserNotFound;
                 if (user.Info == null) return ConfirmCode.Fail;
                 user.Info.Avatar = path;
@@ -253,7 +249,7 @@ namespace Education.BLL.Services.UserServices.Profile
         {
             using (var Data = DataFactory.Get())
             {
-                var User = GetUser(userDTO,Data);
+                var User = GetUserService.Get(userDTO, Data);
                 ConfirmResult res;
                 if (User == null || PassHasher.Get(oldpassword) != User.Password) return new ConfirmResult { Status = ConfirmCode.UserNotFound };
                 if (User.authType == AuthType.Simple)

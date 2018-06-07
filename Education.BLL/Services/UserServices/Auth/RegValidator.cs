@@ -61,10 +61,10 @@ namespace Education.BLL.Services.UserServices.Auth
             return CheckResult.Ok;
         }
 
-        public RegisterResult Check(UserDTO userDTO, IUOW Data)
+        public RegisterResult Check(RegUserInfo userDTO, IUOW Data)
         {
             bool emailExists = !String.IsNullOrEmpty(userDTO.Email);
-            bool phoneExists = !String.IsNullOrEmpty(userDTO.PhoneNumber);
+            bool phoneExists = !String.IsNullOrEmpty(userDTO.Phone);
 
             if (!emailExists && !phoneExists) return RegisterResult.NeedContact;
 
@@ -77,7 +77,7 @@ namespace Education.BLL.Services.UserServices.Auth
 
             if (phoneExists)
             {
-                Check = checkPhone(userDTO.PhoneNumber, Data);
+                Check = checkPhone(userDTO.Phone, Data);
                 if (Check == CheckResult.AlreadyExists) return RegisterResult.PhoneAlreadyExists;
                 else if (Check == CheckResult.WrongValue) return RegisterResult.WrongPhone;
             }
@@ -89,7 +89,7 @@ namespace Education.BLL.Services.UserServices.Auth
                 else if (Check == CheckResult.WrongValue) return RegisterResult.WrongEmail;
             }
 
-            if (checkFullName(userDTO.FullName) != CheckResult.Ok) return RegisterResult.WrongFullName;
+            if (checkFullName(userDTO.Name) != CheckResult.Ok) return RegisterResult.WrongFullName;
 
             return RegisterResult.Confirm;           
 
