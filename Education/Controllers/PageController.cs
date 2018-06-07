@@ -42,12 +42,12 @@ namespace Education.ControllersPageService
             if(id == -1)
             {
                 if (PageService.CanCreate(user))
-                    return View(new PageControl { PageDTO = null, Map = PageService.GenerateMap() });
+                    return View(new PageControl { PageDTO = null, Map = PageService.Map.Get });
                 else return Redirect(AccessCode.NoPremision);
             }
             var page = PageService.Get(id, user);
             if(page.Item1 == AccessCode.Succsess && page.Item2.Access.CanUpdate)
-                return View(new PageControl { PageDTO = page.Item2, Map = PageService.GenerateMap() });
+                return View(new PageControl { PageDTO = page.Item2, Map = PageService.Map.Get });
             return Redirect(page.Item1);
         }
 

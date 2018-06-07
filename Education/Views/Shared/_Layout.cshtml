@@ -18,9 +18,15 @@
 </head>
 <body>
     <div class="Header">
-        <div class="Name"><a href="/">EducationPortal</a></div>
-        @await Component.InvokeAsync("Profile")
+        <div class="Main">
+            <div class="Name"><a href="/">EducationPortal</a></div>
+            @await Component.InvokeAsync("Profile")
+        </div>
+        <div class="Menu">
+            @await Component.InvokeAsync("Menu")
+        </div>
     </div>
+   
     <div class="Content">
         @RenderBody()
     </div>

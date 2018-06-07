@@ -1,15 +1,14 @@
-﻿
-@{
-    Layout = null;
-}
+﻿@model Education.BLL.DTO.Pages.PagesDTO
 
-<!DOCTYPE html>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Menu</title>
-</head>
-<body>
-</body>
-</html>
+<div class="Description">
+    <div class="Name">
+        @Html.ActionLink("Меню","Index","Home")
+    </div>
+    <div class="Edit">
+        @if (Model.CanCreate)
+        {
+            @Html.ActionLink("Добавить страницу","Control","Page")
+        }
+    </div>
+</div>

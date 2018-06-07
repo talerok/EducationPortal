@@ -52,7 +52,7 @@ namespace Education.DAL.Repositories
         private IRepos<UserGroup> UserGroupRepository_p;
         private IRepos<Note> NoteRepository_p;
         private IRepos<Page> PageRepository_p;
-        //-------------------
+
         public IRepos<UserInfo> UserInfoRepository
         {
             get

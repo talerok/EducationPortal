@@ -41,6 +41,7 @@ namespace Education.DAL.Repositories
             modelBuilder.Entity<Section>().HasOne(x => x.Group).WithMany(x => x.Sections).OnDelete(DeleteBehavior.Cascade);
             //--------------------------------------------------
             modelBuilder.Entity<Page>().HasOne(x => x.ParentPage).WithMany(x => x.ChildPages).OnDelete(DeleteBehavior.Restrict);
+
         }
 
 

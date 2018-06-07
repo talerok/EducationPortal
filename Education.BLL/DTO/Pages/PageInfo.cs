@@ -9,5 +9,7 @@ namespace Education.BLL.DTO.Pages
         public int Id { get; set; }
         public string Name { get; set; }
         public IEnumerable<PageInfo> Childs { get; set; }
+        public PageInfo Parent { get; set; }
+        public bool Published { get; set; }
     }
 }

@@ -9,6 +9,7 @@ using System.Text;
 using Education.DAL.Entities.Pages;
 using Education.DAL.Entities;
 using Education.BLL.Services.PageServices.Interfaces;
+using Education.BLL.Logic;
 
 namespace Education.BLL.Services.PageServices
 {
@@ -19,12 +20,22 @@ namespace Education.BLL.Services.PageServices
         private IDTOHelper DTOHelper;
         private IGetUserDTO GetUserService;
 
+        public IPageMap Map { get; private set; }
+
+        private void InitMap()
+        {
+            using (var Data = DataFactory.Get())
+                Map = new PageMap(Data.PageRepository.Get());
+        }
+
         public PageService(IPageRules pageRules, IUOWFactory dataFactory, IGetUserDTO getUserService, IDTOHelper dtoHelper)
         {
             PageRules = pageRules;
             DataFactory = dataFactory;
             GetUserService = getUserService;
             DTOHelper = dtoHelper;
+            //---------------------------
+            InitMap();
         }
 
         private PagePreviewDTO GetPreviewDTO(Page page)
@@ -99,30 +110,6 @@ namespace Education.BLL.Services.PageServices
             
         }
 
-        public IEnumerable<PageInfo> GenerateMap()
-        {
-            var res = new List<PageInfo>();
-            using(var Data = DataFactory.Get())
-            {
-                var mainPages = Data.PageRepository.Get().Where(x => x.ParentPage == null);
-                foreach(var page in mainPages)
-                    res.Add(new PageInfo { Id = page.Id, Name = page.Name, Childs = GetMap(page) });
-            }
-            return res;
-        }
-
-        public PagesDTO Get(UserDTO userDTO, bool onlyMain = false)
-        {
-            using(var Data = DataFactory.Get())
-            {
-                var user = GetUserService.Get(userDTO, Data);
-                var pages = Data.PageRepository.Get()
-                    .Where(x => PageRules.CanRead(user, x));
-                if (onlyMain) pages = pages.Where(x => x.ParentPage == null);
-                return new PagesDTO { CanCreate = PageRules.CanCreate(user), MainPages = pages.Select(x => GetDTO(x, user)) };
-            }    
-        }
-
         public (AccessCode,PageDTO) Get(int id, UserDTO userDTO)
         {
             using (var Data = DataFactory.Get())
@@ -153,6 +140,7 @@ namespace Education.BLL.Services.PageServices
                 EditPage(page, pageEditDTO, Data);
                 Data.PageRepository.Edited(page);
                 Data.SaveChanges();
+                Map.Update(page);
                 return AccessCode.Succsess;
             }
         }
@@ -167,6 +155,7 @@ namespace Education.BLL.Services.PageServices
                 if (!PageRules.CanDelete(user, page)) return AccessCode.NoPremision;
                 Data.PageRepository.Delete(page);
                 Data.SaveChanges();
+                Map.Delete(id);
                 return AccessCode.Succsess;
             }
         }
@@ -182,6 +171,7 @@ namespace Education.BLL.Services.PageServices
                 Data.PageRepository.Add(page);
                 //Добавить проверку на цикл
                 Data.SaveChanges();
+                Map.Add(page);
                 return new CreateResultDTO(page.Id, AccessCode.Succsess);
             }
         }
