@@ -1,0 +1,123 @@
+﻿@model Education.BLL.DTO.User.AdminUserInfoDTO
+
+@{
+    Microsoft.AspNetCore.Html.IHtmlContent Option(int val, int selval, string text)
+    {
+        return Html.Raw(String.Format("<option value=\"{0}\"" + (val == selval ? "selected" : "") + ">{1}</option>", val, text));
+    }
+}
+
+<script src="/lib/jquery/dist/jquery.js"></script>
+
+<script>
+    function Extra(val, name, cond, clearf) {
+        if (cond(val))
+            $("#Extra" + name).show();
+        else {
+            $("#Extra" + name).hide();
+            clearf();
+        }
+
+    }
+
+    $(document).ready(function () {
+        var phonef = () => Extra($("#phone").val(), "Phone", function (text) { return text != ""; }, function () { $("#phoneConfirm").prop('checked', false); });
+        var emailf = () => Extra($("#email").val(), "Email", function (text) { return text != ""; }, function () { $("#emailConfirm").prop('checked', false); });
+        var banf = () => Extra($("#Banned").prop('checked'), "Ban", function (val) { return val; }, function () { $("#BanReason").val(""); $("#BanTime").val(""); });
+        phonef();
+        emailf();
+        banf();
+        $("#phone").on("input", function () {
+            phonef();
+        });
+        $("#email").on("input", function () {
+            emailf();
+        });
+        $("#Banned").change(function () {
+            banf();
+        });
+    });
+</script>
+<div class="Navigation">
+    @Html.ActionLink("Админ панель", "Index", "Admin")>>
+    @Html.ActionLink("Пользователи", "Users", "Admin")>>
+    @Html.ActionLink(Model.name, "UserInfo", "Admin", new { id = Model.Id })
+</div>
+<div class="Description">
+    <div class="Name">
+        Пользователь
+    </div>
+</div>
+<div class="Panel">
+    @using (Html.BeginForm("EditUser", "Admin", FormMethod.Post))
+    {
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <h3>Аватар</h3>
+        <div class="DataFields">
+            <img class="Avatar" src="@Model.Avatar" />
+            @Html.TextBox("Avatar", Model.Avatar)
+        </div>
+        <h3>Login</h3>
+        <div class="DataFields">
+            @Html.TextBox("Login", Model.Login)
+        </div>
+        <h3>ФИО</h3>
+        <div class="DataFields">
+            @Html.TextBox("name", Model.name)
+        </div>
+        <h3>Уровень пользователя</h3>
+        <div class="DataFields">
+            <select name="Level">
+                @Option(0, Model.Level, "Пользователь")
+                @Option(1, Model.Level, "Модератор")
+                @Option(2, Model.Level, "Админ")
+            </select>
+        </div>
+        <h3>Email</h3>
+        <div class="DataFields">
+            @Html.TextBox("email", Model.email)
+            <span id="ExtraEmail">
+                <label>Подтвержден</label>
+                @Html.CheckBox("emailConfirm", Model.emailConfirm == true)
+            </span>
+        </div>
+        <h3>Телефон</h3>
+        <div class="DataFields">
+            @Html.TextBox("phone", Model.phone)
+            <span id="ExtraPhone">
+                <label>Подтвержден</label>
+                @Html.CheckBox("phoneConfirm", Model.phoneConfirm == true)
+            </span>
+        </div>
+        <h3>Метод авторизации</h3>
+        <div class="DataFields">
+            <select name="authType">
+                @Option(0, (int)Model.authType, "Обычный")
+                @Option(1, (int)Model.authType, "Email")
+                @Option(2, (int)Model.authType, "Телефон")
+            </select>
+        </div>
+
+        <h3>Блокировка</h3>
+        <div class="DataFields">
+            <label>Заблокирован</label>
+            @Html.CheckBox("Banned", Model.Banned)
+            <span id="ExtraBan">
+                <h4>Причина</h4>
+                @Html.TextBox("BanReason", Model.BanReason)
+                <h4>Дата разблокировки</h4>
+                @Html.TextBox("BanTime", Model.BanTime)
+            </span>
+        </div>
+        <div class="DataFields">
+            <input type="submit" value="Сохранить" />
+        </div>
+    }
+    <div class="DataFields">
+        @using (Html.BeginForm("ClearUserSessions", "Admin", FormMethod.Post))
+        {
+            <input type="hidden" value="@Model.Id" />
+            <input type="submit" value="Сбросить все сессии" />
+        }
+    </div>
+</div>

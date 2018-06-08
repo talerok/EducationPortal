@@ -40,7 +40,7 @@ namespace Education.DAL.Repositories
             modelBuilder.Entity<Theme>().HasOne(x => x.Section).WithMany(x => x.Themes).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Section>().HasOne(x => x.Group).WithMany(x => x.Sections).OnDelete(DeleteBehavior.Cascade);
             //--------------------------------------------------
-            modelBuilder.Entity<Page>().HasOne(x => x.ParentPage).WithMany(x => x.ChildPages).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Page>().HasOne(x => x.ParentPage).WithMany(x => x.ChildPages).OnDelete(DeleteBehavior.ClientSetNull);
 
         }
 

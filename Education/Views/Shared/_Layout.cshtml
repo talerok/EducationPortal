@@ -1,10 +1,14 @@
-﻿<!DOCTYPE html>
+﻿@inject Education.BLL.Services.ConfigService.Interfaces.IConfigService ConfigService
+
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Education</title>
+    <title>@ConfigService.Name - @ViewData["Title"]</title>
+    <link rel="shortcut icon" href="@ConfigService.IconPath" type="image/x-icon">
 
+    <link rel="stylesheet" href="~/css/site.css" />
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
         <link rel="stylesheet" href="~/css/site.css" />
@@ -19,7 +23,7 @@
 <body>
     <div class="Header">
         <div class="Main">
-            <div class="Name"><a href="/">EducationPortal</a></div>
+            <div class="Name"><a href="/">@ConfigService.Name</a></div>
             @await Component.InvokeAsync("Profile")
         </div>
         <div class="Menu">

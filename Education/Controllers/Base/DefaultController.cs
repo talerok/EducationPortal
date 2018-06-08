@@ -23,5 +23,20 @@ namespace Education.Controllers.Base
                     return RedirectToAction("Index", "Home");
             }
         }
+
+        protected IActionResult ErrorCode(AccessCode code)
+        {
+            switch (code)
+            {
+                case AccessCode.Error:
+                    return BadRequest();
+                case AccessCode.NoPremision:
+                    return Unauthorized();
+                case AccessCode.NotFound:
+                    return NotFound();
+                default:
+                    return Ok();
+            }
+        }
     }
 }

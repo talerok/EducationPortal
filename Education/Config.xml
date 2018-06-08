@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<Data xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ConnectionString>Server=(localdb)\mssqllocaldb;Database=EDCTest;Trusted_Connection=True;</ConnectionString>
+  <Name>Детский сад №100</Name>
+  <IconPath>favicon.ico</IconPath>
+</Data>

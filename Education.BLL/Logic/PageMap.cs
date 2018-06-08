@@ -20,6 +20,7 @@ namespace Education.BLL.Logic
         {
             if (child.Parent == null) return;
             (child.Parent.Childs as List<PageInfo>).Remove(child);
+            child.Parent = null;
         }
 
         private void AddChild(int ParrentId, PageInfo child)
@@ -27,6 +28,7 @@ namespace Education.BLL.Logic
             PageInfo parent = null;
             if (!Pages.TryGetValue(ParrentId, out parent)) return;
             (parent.Childs as List<PageInfo>).Add(child);
+            child.Parent = parent;
         }
 
         public PageMap(IEnumerable<Page> pages)
@@ -64,14 +66,18 @@ namespace Education.BLL.Logic
             PageInfo.Published = page.Published;
             if(PageInfo.Parent == null)
             {
-                if(page.ParentPage != null)
+                if (page.ParentPage != null)
+                {
+                    (Get as List<PageInfo>).Remove(PageInfo);
                     AddChild(page.ParentPage.Id, PageInfo);
+                }
             }
             else
             {
                 if(page.ParentPage == null)
                 {
                     RemoveChild(PageInfo);
+                    (Get as List<PageInfo>).Add(PageInfo);
                 }
                 else if(page.ParentPage.Id != PageInfo.Parent.Id)
                 {

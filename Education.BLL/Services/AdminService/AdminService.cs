@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Education.BLL.Services.AdminService
 {
-    class AdminService : IAdminService
+    public class AdminService : IAdminService
     {
         private IGetUserDTO GetUserService { get; set; }
         private IUOWFactory DataFactory { get; set; }
@@ -26,6 +26,7 @@ namespace Education.BLL.Services.AdminService
             return new AdminUserInfoDTO
             {
                 authType = user.authType,
+                Login = user.Login,
                 Avatar = user.Info?.Avatar,
                 email = user.Email?.Value,
                 phone = user.Phone?.Value,
@@ -101,26 +102,54 @@ namespace Education.BLL.Services.AdminService
             }
         }
 
+        public bool IsAdmin(UserDTO userDTO)
+        {
+            using(var Data = DataFactory.Get())
+            {
+                var user = GetUserService.Get(userDTO, Data);
+                if (user == null || user.Level < 2) return false;
+                else return true;
+            }
+        }
+
         public (AccessCode Code,IEnumerable<AdminUserInfoDTO> Result) Search(UserDTO userDTO, string name)
         {
             using(var Data = DataFactory.Get())
             {
                 var user = GetUserService.Get(userDTO, Data);
                 if (user == null || user.Level < 2) return (AccessCode.NoPremision, null);
-                var users = Data.UserRepository.Get().Where(x => x.Login.Contains(name) || x.Info.FullName.Contains(name))
-                    .Select(x => GetDTO(x));
-                return (AccessCode.Succsess, users);
+                var users = Data.UserRepository.Get().Where(x => x.Login.Contains(name) || x.Info.FullName.Contains(name));
+                var res = new List<AdminUserInfoDTO>();
+                foreach (var us in users)
+                    res.Add(GetDTO(us));
+                return (AccessCode.Succsess, res);
             }
         }
 
-        public (AccessCode Code, IEnumerable<AdminUserInfoDTO> Result) GetAll(UserDTO userDTO, string name)
+        public (AccessCode Code, IEnumerable<AdminUserInfoDTO> Result) GetAll(UserDTO userDTO)
         {
             using (var Data = DataFactory.Get())
             {
                 var user = GetUserService.Get(userDTO, Data);
                 if (user == null || user.Level < 2) return (AccessCode.NoPremision, null);
-                var users = Data.UserRepository.Get().Select(x => GetDTO(x));
-                return (AccessCode.Succsess, users);
+                var users = Data.UserRepository.Get();
+                var res = new List<AdminUserInfoDTO>();
+                foreach (var us in users)
+                    res.Add(GetDTO(us));
+                return (AccessCode.Succsess, res);
+            }
+        }
+
+        public (AccessCode Code, AdminUserInfoDTO Result) GetUser(UserDTO userDTO, int id)
+        {
+            using (var Data = DataFactory.Get())
+            {
+                var user = GetUserService.Get(userDTO, Data);
+                if (user == null || user.Level < 2) return (AccessCode.NoPremision, null);
+                var res = Data.UserRepository.Get().FirstOrDefault(x => x.Id == id);
+                if (res == null) return (AccessCode.NotFound, null);
+                return (AccessCode.Succsess, GetDTO(res)); 
+                
             }
         }
 
@@ -134,6 +163,8 @@ namespace Education.BLL.Services.AdminService
                 if (user == null) return AccessCode.NotFound;
                 EditUser(user, userInfo);
                 EditUserBan(user, userInfo, Data);
+                Data.UserRepository.Edited(user);
+                Data.SaveChanges();
                 return AccessCode.Succsess;
             }
         }
@@ -148,6 +179,7 @@ namespace Education.BLL.Services.AdminService
                 if (user == null) return AccessCode.NotFound;
                 var claims = Data.UserClaimRepository.Get().Where(x => x.User == user);
                 Data.UserClaimRepository.Delete(claims);
+                Data.SaveChanges();
                 return AccessCode.Succsess;
             }
         }

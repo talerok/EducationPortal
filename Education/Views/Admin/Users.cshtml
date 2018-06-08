@@ -1,0 +1,63 @@
+﻿<script src="/lib/jquery/dist/jquery.js"></script>
+
+<script>
+    function LoadUsers(name) {
+        var info;
+        if (name == "")
+            info = {};
+        else info = {
+            search: name
+        };
+
+        $.ajax({
+            url: '@Url.Action("SearchUsers","Admin")',
+            method: 'POST',
+            data: info,
+            success: function (data) {
+                ShowUsers(data);
+            },
+            error: function (jqxhr, status, errorMsg) {
+                ShowError();
+            }
+        });
+
+    }
+
+    function ShowUsers(data) {
+        $("#Result").html(data);
+        $("#ResultMessage").text("");
+    }
+
+    function ShowError() {
+        $("#Result").html("");
+        $("#ResultMessage").text("Ошибка загрузки");
+
+    }
+    $(document).ready(function () {
+        $("#Send").click(function () {
+            LoadUsers($("#Name").val());
+        });
+    });
+</script>
+
+<div class="Navigation">
+    @Html.ActionLink("Админ панель", "Index", "Admin")>>
+    @Html.ActionLink("Пользователи", "Users", "Admin")
+</div>
+<div class="Description">
+    <div class="Name">
+        Пользователи
+    </div>
+</div>
+
+<div class="SearchPanel">
+    <input id="Name" placeholder="Поиск пользователя"/>
+    <input type="button" value="Поиск" id="Send"  />
+</div>
+<div class="ResultMessage" id="ResultMessage">
+
+</div>
+<div class="Result" id="Result">
+
+</div>
+

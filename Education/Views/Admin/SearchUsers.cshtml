@@ -1,0 +1,95 @@
+﻿@model IEnumerable<Education.BLL.DTO.User.AdminUserInfoDTO>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Аватар
+            </th>
+            <th>
+                Id
+            </th>
+            <th>
+                Login
+            </th>
+            <th>
+                ФИО
+            </th>
+            <th>
+                Email
+            </th>
+            <th>
+                Подверждение Email
+            </th>
+            <th>
+                Телефон
+            </th>
+            <th>
+                Подверждение телефона
+            </th>
+            <th>
+                Метод авторизации
+            </th>
+            <th>
+                Уровень привилегий
+            </th>
+            <th>
+                Заблокирован
+            </th>
+            <th>
+                Причина блокировки
+            </th>
+            <th>
+                Время окончания блокировки
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                <img class="Avatar" src="@item.Avatar" />
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Id)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Login)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.email)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.emailConfirm)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.phone)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.phoneConfirm)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.authType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Level)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Banned)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BanReason)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BanTime)
+            </td>
+            <td>
+                @Html.ActionLink("Редактировать", "UserInfo", new { id = item.Id })
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

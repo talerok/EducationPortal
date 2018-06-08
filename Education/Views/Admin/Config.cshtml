@@ -1,0 +1,36 @@
+﻿@model Education.Models.Config
+
+<div class="Description">
+    <div class="Name">
+        Конфигурация сайта
+    </div>
+</div>
+<div class="Panel">
+    <h3>
+        favicon
+    </h3>
+    @using (Html.BeginForm("ChangeIcon", "Admin", FormMethod.Post))
+    {
+        <img src="@Model.Icon" />
+        <div class="DataFields">
+            <input type="file" />
+            <input type="submit" value="Изменить favicon" />
+        </div>
+    }
+    @using (Html.BeginForm("ChangeConfig", "Admin", FormMethod.Post))
+    {
+        <h3>
+            Название учреждения
+        </h3>
+        <div class="DataFields">
+            @Html.EditorFor(x => x.Name)
+        </div>
+        <h3>
+            Строка подключения
+        </h3>
+        <div class="DataFields">
+            @Html.EditorFor(x => x.ConnString)
+            <input type="submit" value="Сохранить" />
+        </div>
+    }
+</div>

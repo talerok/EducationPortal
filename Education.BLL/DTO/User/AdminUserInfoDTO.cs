@@ -7,6 +7,7 @@ namespace Education.BLL.DTO.User
     public class AdminUserInfoDTO : UserInfoDTO
     {
         public int Id { get; set; }
+        public string Login { get; set; }
         public short Level { get; set; }
         public bool Banned { get; set; } 
         public string BanReason { get; set; }

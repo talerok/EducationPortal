@@ -1,0 +1,36 @@
+﻿@model IEnumerable<Education.BLL.DTO.Pages.PageInfo>
+
+@{ 
+        string GenerateMap(Education.BLL.DTO.Pages.PageInfo page)
+        {
+            string res = string.Format("<div class=\"Page\">--{0} <a href=\"{1}\">Редактировать</a><div class=\"Childs\">", page.Name, Url.Action("Control", "Page", new { id = page.Id }));
+        foreach(var child in page.Childs)
+            res += GenerateMap(child);
+        return res + "</div></div>";
+    }
+
+    string Map()
+    {
+        var res = "";
+        foreach (var page in Model)
+            res += GenerateMap(page);
+        return res;
+
+    }
+}
+
+<div class="Navigation">
+    @Html.ActionLink("Админ панель", "Index", "Admin")>>
+    @Html.ActionLink("Страницы", "All", "Page")
+</div>
+<div class="Description">
+    <div class="Name">
+        Все Страницы
+    </div>
+    <div class="Edit">
+        @Html.ActionLink("Создать страницу","Control","Page")
+    </div>
+</div>
+<div class="AllPages">
+    @Html.Raw(Map())
+</div>

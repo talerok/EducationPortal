@@ -78,7 +78,7 @@
     font-weight: 600;
 }
 
-.Menu a:hover {
+.Menu a:hover, .AdminMenu a:hover {
     color: #e2ec54 !important;
 }
 
@@ -321,6 +321,7 @@
     padding-left: 10px;
     margin-top: 3px;
     margin-bottom: 3px;
+    color: white;
 }
 
 .Description .Name {
@@ -517,8 +518,30 @@
 
 .Panel{
     width: 300px;
+    margin-left: 20px;
 }
 
+.AllPages .Page{
+    font-weight: 600;
+    margin-left: 20px;
+    margin-bottom: 5px;
+}
+
+.AllPages .Page a {
+    color: #4083ff;
+}
+
+.AdminMenu {
+    margin-top: 10px;
+    margin-left: 20px;
+}
+
+.AdminMenu a {
+    font-weight: 600;
+    color: white;
+    background-color: #4083ff;
+    padding: 10px;
+}
 
 /* Carousel */
 .carousel-caption p {

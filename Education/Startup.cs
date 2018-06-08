@@ -24,6 +24,10 @@ using Education.BLL.Services.ImageManager.Interfaces;
 using Microsoft.AspNetCore.Http.Features;
 using Education.BLL.Services.PageServices.Interfaces;
 using Education.BLL.Services.PageServices;
+using Education.BLL.Services.AdminService.Interfaces;
+using Education.BLL.Services.AdminService;
+using Education.BLL.Services.ConfigService.Interfaces;
+using Education.BLL.Services;
 
 namespace Education
 {
@@ -39,18 +43,26 @@ namespace Education
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            string connString = @"Server=(localdb)\mssqllocaldb;Database=EDCTest;Trusted_Connection=True;";
             //----------------------------------------------------
+            IConfigService configService = new XMLConfigService("Config.xml");
             IMessenger messenger_sms = new SmsMessenger();
             IMessenger messenger_email = new EmailMessenger();
             IPassHasher passHasher = new SHA256Hasher();
             IKeyGenerator smallKeyGenerator = new SmallKeyGenerator();
             IKeyGenerator bigKeyGenerator = new BigKeyGenerator();
             IRegValidator regValidator = new RegValidator();
-            IUOWFactory UOWFactory = new EFUOWFactory(connString);
+            IUOWFactory UOWFactory = new EFUOWFactory(configService.ConnectionString);
             IGetUserDTO getUserDTO = new GetUserDTO();
+
             //----------------------------------------------------
             IClaimService claimService = new ClaimService(UOWFactory);
+            //----------------------------------------------------
+            services.AddSingleton<IConfigService, IConfigService>(
+                   serviceProvider =>
+                   {
+                       return configService;
+                   }
+               );
             //----------------------------------------------------
             services.AddSingleton<IGetUserDTO, IGetUserDTO>(
                    serviceProvider =>
@@ -181,15 +193,21 @@ namespace Education
                     return new ImageService(UOWFactory, getUserDTO);
                 }
             );
+            //-------------------------------------------
+            services.AddSingleton<IAdminService, AdminService>(
+                serviceProvider =>
+                {
+                    return new AdminService(getUserDTO, UOWFactory);
+                }
+            );
 
             services.Configure<FormOptions>(x =>
             {
-                x.ValueCountLimit = 10;
+                x.ValueCountLimit = int.MaxValue;
                 x.MemoryBufferThreshold = int.MaxValue;
                 x.ValueLengthLimit = int.MaxValue;
                 x.MultipartBodyLengthLimit = int.MaxValue; // In case of multipart
             });
-
             //------------------------------------------------------
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                  .AddCookie(options =>

@@ -29,6 +29,13 @@ namespace Education.ControllersPageService
             return ClaimService.GetUser(User.Claims);
         }
 
+        public IActionResult All()
+        {
+            if (PageService.CanCreate(GetUser()))
+                return View(PageService.Map.Get);
+            else return Redirect(AccessCode.NoPremision);
+        }
+
         public IActionResult Index(int id)
         {
             var res = PageService.Get(id, GetUser());
