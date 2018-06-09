@@ -56,7 +56,7 @@ namespace Education.Controllers
 
             var res = SectionService.Create(section, GetUser());
             if (res.Code == AccessCode.Succsess)
-                return RedirectToAction("Index", new { id = sectionRequest.Id });
+                return RedirectToAction("Index", new { id = res.Id });
             else return Redirect(res.Code);
         }
 

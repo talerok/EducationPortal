@@ -184,6 +184,7 @@
 .Message {
     display: table;
     width: 100%;
+    box-shadow: 1px 1px 6px 1px;
 }
 
 .Message .Body{
@@ -194,11 +195,8 @@
     width: 155px;
     text-align: center;
     display: table-cell;
-    border-width: 0;
-    border-right: 1px;
-    border-top: 1px;
-    border-color: lightgray;
-    padding-right: 5px;
+    border-width: 0px;
+    border-right-width: 1px;
     border-style: solid;
 }
 
@@ -255,8 +253,11 @@
     background: linear-gradient(to left, #36ce5e, rgba(96, 243, 36, 0.47));
 }
 
-.Message .Info .Name{
-   font-weight: 600;
+.Message .Info .Name {
+    font-weight: 600;
+    font-weight: 600;
+    background-color: #4083ff;
+    color: white;
 }
 
 .AddMessage .Text {
@@ -267,8 +268,8 @@
 
 .Message .Text {
     min-height: 160px;
-    padding: 5px;
     vertical-align: middle;
+    margin: 10px;
 }
 
 .ThemePreview .ThemeInfo {
@@ -291,10 +292,11 @@
     box-shadow: 1px 1px 6px 1px;
 }
 
-.Body .Panel {
+.Body .MessageTime {
     background-color: #4083ff;
     color: white;
     padding-right: 10px;
+    text-align: right;
 }
 
 .Body .Edited {
@@ -321,7 +323,6 @@
     padding-left: 10px;
     margin-top: 3px;
     margin-bottom: 3px;
-    color: white;
 }
 
 .Description .Name {
